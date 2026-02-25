@@ -82,15 +82,15 @@
         Online Now
         <span id="nav-online-count" class="chat-nav-pill-count" aria-live="polite">-- / --</span>
       </a>
-      <a href="/logs" class="chat-nav-pill">Match Logs</a>
+      <span class="chat-nav-pill" aria-current="page">Match Logs</span>
       <a href="/chat" class="chat-nav-pill">Chat</a>
       <a href="/mapsdb" class="chat-nav-pill">MapsDB</a>
     </div>
 
     <div class="logs-topbar wt-topbar">
       <div>
-        <h1><%= if @scope == "short", do: "Match Logs (Short) (Elixir)", else: "Match Logs (Elixir)" %></h1>
-        <p>Phoenix port of `/var/www/kogasatopia/stats/logs/` using `/stats/logs_fragment.php`</p>
+        <h1><%= if @scope == "short", do: "Match Logs (Short)", else: "Match Logs" %></h1>
+        <p>Currently only enabled for base TF2 due to accuracy tracking and other stats being incompatible with TF2 Classified; Sourcemod-side log creation occurs when total damage reaches 200+</p>
       </div>
       <div class="logs-topbar-meta wt-topbar-badge">
         <%= @total_logs %> logs · Page <%= @page %>/<%= @total_pages %>

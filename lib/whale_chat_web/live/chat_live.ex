@@ -140,13 +140,13 @@ defmodule WhaleChatWeb.ChatLive do
             <span id="chat-nav-online-count-top" class="chat-nav-pill-count">-- / --</span>
           </a>
           <a href="/logs" class="chat-nav-pill">Match Logs</a>
-          <a href="/chat" class="chat-nav-pill">Chat</a>
+          <span class="chat-nav-pill" aria-current="page">Chat</span>
           <a href="/mapsdb" class="chat-nav-pill">MapsDB</a>
         </div>
 
         <div class="chat-topbar">
           <div>
-            <h1 class="chat-title">WhaleChat (Elixir)</h1>
+            <h1 class="chat-title">WhaleChat</h1>
             <p id="nav-chat-label" class="chat-subtitle">Last msg. --</p>
           </div>
           <div class="chat-topbar-right">
