@@ -1,4 +1,49 @@
 (() => {
+  const WTOnlineCountCache = {
+    key: "wt_online_summary_v1",
+
+    read() {
+      try {
+        const raw = window.localStorage?.getItem(this.key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        const count = Number(parsed?.player_count);
+        const max = Number(parsed?.visible_max);
+        if (!Number.isFinite(count) || count < 0 || !Number.isFinite(max) || max <= 0) return null;
+        return { player_count: count, visible_max: max, updated: Number(parsed?.updated) || 0 };
+      } catch (_err) {
+        return null;
+      }
+    },
+
+    write(payload) {
+      try {
+        const count = Number(payload?.player_count ?? 0);
+        const max = Number(payload?.visible_max ?? payload?.visible_max_players ?? 0);
+        const updated = Number(payload?.updated ?? Math.floor(Date.now() / 1000));
+        if (!Number.isFinite(count) || count < 0 || !Number.isFinite(max) || max <= 0) return;
+        window.localStorage?.setItem(this.key, JSON.stringify({
+          player_count: Math.max(0, count),
+          visible_max: max,
+          updated
+        }));
+      } catch (_err) {
+        // ignore cache errors
+      }
+    },
+
+    apply(labelEl, mirrorEl = null) {
+      const cached = this.read();
+      if (!cached) return false;
+      const label = `${cached.player_count} / ${cached.visible_max}`;
+      if (labelEl) labelEl.textContent = label;
+      if (mirrorEl) mirrorEl.textContent = label;
+      return true;
+    }
+  };
+
+  window.WTOnlineCountCache = WTOnlineCountCache;
+
   // Handle flash close
   document.querySelectorAll("[role=alert][data-flash]").forEach((el) => {
     el.addEventListener("click", () => {
@@ -23,15 +68,11 @@
       this.seenIds = new Set();
       this.maxSeenId = 0;
       this.minSeenId = null;
-
-      this.topBtn = document.getElementById("chat-btn-top");
-      this.bottomBtn = document.getElementById("chat-btn-bottom");
-      this.lockBtn = document.getElementById("chat-btn-lock");
-      this.navCountEl = document.getElementById("nav-online-count");
-      this.chatInput = document.getElementById("chat-input");
-      this.navChatLabel = document.getElementById("nav-chat-label");
+      this.lastNavCountLabel = null;
+      this.lastChatAgeLabel = null;
       this.onlineSummaryEndpoint = "/stats/online_summary.php";
       this.chatAgeEndpoint = "/stats/chat.php?limit=1&alerts_only=1";
+      this.bindUiRefs();
 
       this.onScroll = () => {
         if (this.el.scrollTop <= 0 && !this.loadingOlder) {
@@ -69,6 +110,11 @@
       }
 
       this.syncSeenRows();
+      if (this.navCountEl) {
+        const mirrorId = this.navCountEl.getAttribute("data-mirror-target");
+        const mirror = mirrorId ? document.getElementById(mirrorId) : null;
+        WTOnlineCountCache.apply(this.navCountEl, mirror);
+      }
       this.updateLockButton();
       this.scrollToBottom();
       this.updateNavCount();
@@ -80,9 +126,12 @@
     beforeUpdate() {
       this.wasNearBottom = this.distanceFromBottom() < 24;
       this.preUpdateMaxSeenId = this.maxSeenId || 0;
+      this.captureNavLabels();
     },
 
     updated() {
+      this.bindUiRefs();
+      this.restoreNavLabels();
       const rows = this.collectRows();
       const appended = rows.filter((row) => !this.seenIds.has(row.id) && row.id > (this.preUpdateMaxSeenId || 0));
       const appendedAlertCount = appended.reduce((sum, row) => sum + (row.alert ? 1 : 0), 0);
@@ -111,6 +160,41 @@
       clearInterval(this.navCountTimer);
       clearInterval(this.chatAgeTimer);
       this.resetUnread();
+    },
+
+    bindUiRefs() {
+      this.topBtn = document.getElementById("chat-btn-top");
+      this.bottomBtn = document.getElementById("chat-btn-bottom");
+      this.lockBtn = document.getElementById("chat-btn-lock");
+      this.navCountEl = document.getElementById("nav-online-count");
+      this.chatInput = document.getElementById("chat-input");
+      this.navChatLabel = document.getElementById("nav-chat-label");
+    },
+
+    captureNavLabels() {
+      if (this.navCountEl && this.navCountEl.isConnected) {
+        const text = (this.navCountEl.textContent || "").trim();
+        if (text && text !== "-- / --") this.lastNavCountLabel = text;
+      }
+      if (this.navChatLabel && this.navChatLabel.isConnected) {
+        const text = (this.navChatLabel.textContent || "").trim();
+        if (text && text !== "Last msg. --") this.lastChatAgeLabel = text;
+      }
+    },
+
+    restoreNavLabels() {
+      if (this.navCountEl) {
+        const mirrorId = this.navCountEl.getAttribute("data-mirror-target");
+        const mirror = mirrorId ? document.getElementById(mirrorId) : null;
+        const appliedCache = WTOnlineCountCache.apply(this.navCountEl, mirror);
+        if (!appliedCache && this.lastNavCountLabel) {
+          this.navCountEl.textContent = this.lastNavCountLabel;
+          if (mirror) mirror.textContent = this.lastNavCountLabel;
+        }
+      }
+      if (this.navChatLabel && this.lastChatAgeLabel) {
+        this.navChatLabel.textContent = this.lastChatAgeLabel;
+      }
     },
 
     collectRows() {
@@ -218,12 +302,14 @@
         if (this.navCountEl) {
           const label = `${count} / ${max}`;
           this.navCountEl.textContent = label;
+          this.lastNavCountLabel = label;
           const mirrorId = this.navCountEl.getAttribute("data-mirror-target");
           if (mirrorId) {
             const mirror = document.getElementById(mirrorId);
             if (mirror) mirror.textContent = label;
           }
         }
+        WTOnlineCountCache.write({ player_count: count, visible_max: max, updated: payload.updated });
 
         if (this.chatInput) {
           const template = this.chatInput.getAttribute("data-dynamic-placeholder") || "Type to {count} players | All messages are deleted after 24hrs";
@@ -266,6 +352,7 @@
         const messages = Array.isArray(payload.messages) ? payload.messages : [];
         if (messages.length === 0) {
           this.navChatLabel.textContent = "Last msg. --";
+          this.lastChatAgeLabel = "Last msg. --";
           return;
         }
 
@@ -273,9 +360,37 @@
         const createdAt = Number(last.created_at || 0);
         const nowSeconds = Math.floor(Date.now() / 1000);
         this.navChatLabel.textContent = `Last msg. ${this.formatChatAge(nowSeconds - createdAt)}`;
+        this.lastChatAgeLabel = this.navChatLabel.textContent;
       } catch (_err) {
         // parity with PHP: ignore errors
       }
+    }
+  };
+
+  Hooks.ChatComposer = {
+    mounted() {
+      this.onKeyDown = (event) => {
+        if (event.key !== "Enter") return;
+        if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.isComposing) return;
+
+        event.preventDefault();
+
+        const form = this.el.form || document.getElementById("chat-form");
+        if (!form) return;
+
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      };
+
+      this.el.addEventListener("keydown", this.onKeyDown);
+    },
+
+    destroyed() {
+      this.el.removeEventListener("keydown", this.onKeyDown);
     }
   };
 

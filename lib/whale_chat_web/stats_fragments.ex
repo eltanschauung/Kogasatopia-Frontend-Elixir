@@ -279,6 +279,19 @@ defmodule WhaleChatWeb.StatsFragments do
     started_at = Map.get(log, :started_at, 0)
     duration = Map.get(log, :duration, 0)
     mode = fallback(Map.get(log, :gamemode), "Unknown")
+    players = Map.get(log, :players, [])
+
+    body_html =
+      if is_list(players) and players != [] do
+        [
+          ~s(<div class="table-wrapper"><table class="stats-table log-table"><thead><tr><th>Player</th><th>K</th><th>D</th><th>K/D</th><th>Acc.</th><th>Dmg</th><th>D/M</th><th>DT/M</th><th>AS</th><th>HS</th><th>BS</th><th>Healing</th><th>Ubers</th><th>Time</th></tr></thead><tbody>),
+          Enum.map(players, &current_log_player_row_html(&1, "/stats/assets/whaley-avatar.jpg")),
+          "</tbody></table></div>"
+        ]
+        |> IO.iodata_to_binary()
+      else
+        ~s(<div class="empty-state">No player rows recorded for this log.</div>)
+      end
 
     """
     <details class="log-entry" data-player-count="#{player_count}" data-started-at="#{started_at}">
@@ -288,7 +301,7 @@ defmodule WhaleChatWeb.StatsFragments do
         <span class="log-meta">#{player_count} player#{if player_count == 1, do: "", else: "s"}</span>
       </summary>
       <div class="log-body">
-        <div class="empty-state">Open current match snapshot above for full player table.</div>
+        #{body_html}
       </div>
     </details>
     """

@@ -2,19 +2,37 @@ defmodule WhaleChat.Online do
   @moduledoc false
 
   alias Ecto.Adapters.SQL
+  alias WhaleChat.OnlineFeed
   alias WhaleChat.Repo
 
   def summary do
+    case OnlineFeed.payload() do
+      %{"success" => true} = payload ->
+        %{
+          success: true,
+          player_count: max(to_int(payload["player_count"]), 0),
+          visible_max:
+            payload["visible_max"] ||
+              payload["visible_max_players"] ||
+              32
+              |> to_int(32)
+              |> then(fn v -> if v > 0, do: v, else: 32 end),
+          updated: to_int(payload["updated"], System.system_time(:second))
+        }
+
+      _ ->
+        summary_legacy()
+    end
+  end
+
+  defp summary_legacy do
     now = System.system_time(:second)
     cutoff = now - 180
 
     {player_count, visible_max, updated} =
       case aggregate_server_counts(cutoff, now) do
-        {players, slots, updated_at} when players > 0 and slots > 0 ->
-          {players, slots, updated_at}
-
-        _ ->
-          fallback_online_count(now)
+        {players, slots, updated_at} when players > 0 and slots > 0 -> {players, slots, updated_at}
+        _ -> fallback_online_count(now)
       end
 
     %{

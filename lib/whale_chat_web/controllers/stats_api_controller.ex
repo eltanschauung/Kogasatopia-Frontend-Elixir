@@ -51,7 +51,8 @@ defmodule WhaleChatWeb.StatsApiController do
       StatsFeed.logs(%{
         page: Map.get(params, "page", "1"),
         per_page: Map.get(params, "perPage", Map.get(params, "per_page", "25")),
-        scope: Map.get(params, "scope", "regular")
+        scope: Map.get(params, "scope", "regular"),
+        include_players: Map.get(params, "include_players", "0")
       })
 
     html = StatsFragments.logs_fragment_html(payload)

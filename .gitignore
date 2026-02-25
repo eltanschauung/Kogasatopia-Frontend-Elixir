@@ -27,6 +27,7 @@ erl_crash.dump
 project.md
 phoenix_webserver_explanation.txt
 AGENTS.md
+.server4001.log
 
 # Cached assets / mirrored PHP cache directories
 /priv/static/cache/

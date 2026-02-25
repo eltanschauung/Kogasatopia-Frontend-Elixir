@@ -133,12 +133,13 @@ defmodule WhaleChatWeb.ChatLive do
     ~H"""
     <Layouts.app flash={@flash} wide={true}>
       <div id="chat-container">
-        <div class="chat-page-actions chat-nav-row">
+        <div class="chat-nav-row chat-nav-row-top">
           <a href="/" class="chat-home-btn">Home</a>
           <a href="/online" class="chat-nav-pill">
             Online Now
-            <span id="chat-nav-online-count-top" class="chat-nav-pill-count">0 / 32</span>
+            <span id="chat-nav-online-count-top" class="chat-nav-pill-count">-- / --</span>
           </a>
+          <a href="/logs" class="chat-nav-pill">Match Logs</a>
           <a href="/chat" class="chat-nav-pill">Chat</a>
           <a href="/mapsdb" class="chat-nav-pill">MapsDB</a>
         </div>
@@ -150,7 +151,7 @@ defmodule WhaleChatWeb.ChatLive do
           </div>
           <div class="chat-topbar-right">
             <span id="nav-online-count" class="chat-online-count" data-mirror-target="chat-nav-online-count-top">
-              0 / 32
+              -- / --
             </span>
           </div>
         </div>
@@ -200,6 +201,7 @@ defmodule WhaleChatWeb.ChatLive do
           <textarea
             id="chat-input"
             name="message"
+            phx-hook="ChatComposer"
             rows="2"
             maxlength="180"
             data-dynamic-placeholder="Type to {count} players | All messages are deleted after 24hrs"

@@ -67,38 +67,61 @@ defmodule WhaleChat.OnlineFeed do
   defp fetch_servers(now) do
     cutoff = now - 180
 
-    sql =
+    sql_with_game =
+      "SELECT ip, port, playercount, visible_max, game, game_url, map, city, country, flags, last_update " <>
+        "FROM whaletracker_servers WHERE last_update >= ? ORDER BY port ASC"
+
+    sql_legacy =
       "SELECT ip, port, playercount, visible_max, map, city, country, flags, last_update " <>
         "FROM whaletracker_servers WHERE last_update >= ? ORDER BY port ASC"
 
-    case SQL.query(Repo, sql, [cutoff]) do
+    case SQL.query(Repo, sql_with_game, [cutoff]) do
       {:ok, %{rows: rows, columns: columns}} ->
-        servers =
-          rows
-          |> map_rows(columns)
-          |> Enum.map(fn server ->
-            host_ip = str(server["ip"])
-            host_port = int(server["port"])
-            map_name = str(server["map"])
-            %{
-              "host_ip" => host_ip,
-              "host_port" => host_port,
-              "map_name" => map_name,
-              "player_count" => int(server["playercount"]),
-              "visible_max" => int(server["visible_max"]),
-              "map_image" => resolve_map_image(map_name),
-              "city" => str(server["city"]),
-              "country_code" => server |> Map.get("country") |> str() |> String.downcase(),
-              "extra_flags" => parse_flags(server["flags"]),
-              "last_update" => int(server["last_update"])
-            }
-          end)
+        {:ok, build_server_rows(rows, columns)}
 
-        {:ok, servers}
-
-      {:error, reason} ->
-        {:error, reason}
+      {:error, _} ->
+        case SQL.query(Repo, sql_legacy, [cutoff]) do
+          {:ok, %{rows: rows, columns: columns}} -> {:ok, build_server_rows(rows, columns)}
+          {:error, reason} -> {:error, reason}
+        end
     end
+  end
+
+  defp build_server_rows(rows, columns) do
+    rows
+    |> map_rows(columns)
+    |> Enum.map(fn server ->
+      host_ip = str(server["ip"])
+      host_port = int(server["port"])
+      map_name = str(server["map"])
+
+      game_name =
+        case str(server["game"]) do
+          "" -> "TF2"
+          game -> game
+        end
+
+      game_url =
+        case str(server["game_url"]) do
+          "" -> "440"
+          app_id -> app_id
+        end
+
+      %{
+        "host_ip" => host_ip,
+        "host_port" => host_port,
+        "map_name" => map_name,
+        "game" => game_name,
+        "game_url" => game_url,
+        "player_count" => int(server["playercount"]),
+        "visible_max" => int(server["visible_max"]),
+        "map_image" => resolve_map_image(map_name),
+        "city" => str(server["city"]),
+        "country_code" => server |> Map.get("country") |> str() |> String.downcase(),
+        "extra_flags" => parse_flags(server["flags"]),
+        "last_update" => int(server["last_update"])
+      }
+    end)
   end
 
   defp enrich_players(players) do

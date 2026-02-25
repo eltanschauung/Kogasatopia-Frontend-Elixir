@@ -244,10 +244,20 @@
       <div class="stats-header-shell">
         <header class="header">
           <div class="brand">
-            <img src="/stats/assets/whaletracker_logo.png" style="width:50%" alt="WhaleTracker logo">
+            <img
+              src="/stats/assets/whaletracker_logo.png"
+              width="455"
+              height="250"
+              style="width:50%;height:auto"
+            >
           </div>
           <div class="animation">
-            <img src="/stats/assets/wholesome2.gif" alt="Wholesome">
+            <img
+              src="/stats/assets/wholesome2.gif"
+              width="266"
+              height="108"
+              style="height:auto"
+            >
           </div>
           <div class="header-actions stats-auth">
             <%= if @logged_in do %>
@@ -259,7 +269,10 @@
                     alt=""
                   />
                   <div class="header-user-meta">
-                    <span class="header-user-name">{@viewer_profile[:personaname] || @steamid}</span>
+                    <span
+                      class={["header-user-name", @viewer_profile[:is_admin] && "admin-name"]}
+                      title={if(@viewer_profile[:is_admin], do: "Admin", else: nil)}
+                    >{@viewer_profile[:personaname] || @steamid}</span>
                     <span class="stats-sub" style="margin:0;">{@steamid || ""}</span>
                   </div>
                 <% else %>
@@ -283,16 +296,16 @@
 
       <div class="stats-home-row">
         <div class="tab-controls">
-          <a href="/" class="tab-button">
+          <a href="#" class="tab-button" aria-disabled="true" onclick="return false;">
             <span class="tab-button-label tab-button-label--desktop">Home</span>
             <span class="tab-button-label tab-button-label--mobile">Home</span>
           </a>
           <a href="/online" class="tab-button">
             <span class="tab-button-label tab-button-label--desktop">Online Now</span>
             <span class="tab-button-label tab-button-label--mobile">Online</span>
-            <span class="tab-button-count" id="nav-online-count" aria-live="polite">0 / 32</span>
+            <span class="tab-button-count" id="nav-online-count" aria-live="polite">-- / --</span>
           </a>
-          <a href="https://kogasa.tf/stats/logs/current/" class="tab-button" target="_blank" rel="noopener">
+          <a href="/logs" class="tab-button">
             <span class="tab-button-label tab-button-label--desktop">Match Logs</span>
             <span class="tab-button-label tab-button-label--mobile">Logs</span>
           </a>
@@ -632,6 +645,7 @@
           if (!Number.isFinite(count) || count < 0) count = 0;
           if (!Number.isFinite(max) || max <= 0) max = 32;
           els.navOnlineCount.textContent = `${count} / ${max}`;
+          window.WTOnlineCountCache?.write?.({ player_count: count, visible_max: max, updated: payload.updated });
         } catch (_) {
           // ignore
         }
@@ -965,6 +979,7 @@
         }
       });
       initCumulativeSorting(document);
+      if (els.navOnlineCount && window.WTOnlineCountCache?.apply) window.WTOnlineCountCache.apply(els.navOnlineCount);
       updateNavCount();
       updateChatAgeLabel();
       setInterval(updateNavCount, 10000);

@@ -33,6 +33,15 @@ defmodule WhaleChatWeb.Router do
     get "/nav", PageController, :home
     live "/chat", ChatLive
     get "/online", OnlineController, :index
+    get "/logs", LogsController, :index
+    get "/logs/", LogsController, :index
+    get "/logs/index.php", LogsController, :index
+    get "/logs/short", LogsController, :short
+    get "/logs/short/", LogsController, :short
+    get "/logs/short/index.php", LogsController, :short
+    get "/logs/current", LogsController, :current
+    get "/logs/current/", LogsController, :current
+    get "/logs/current/index.php", LogsController, :current
     get "/stats/login.php", StatsLoginController, :show
     get "/mapsdb", MapsDbController, :index
     get "/mapsdb/index.php", MapsDbController, :index

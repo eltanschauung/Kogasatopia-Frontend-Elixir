@@ -4,6 +4,7 @@ defmodule WhaleChat.MapsDb do
   import Ecto.Query
 
   alias WhaleChat.MapsDb.MapMeta
+  alias WhaleChat.Chat.SteamProfiles
   alias WhaleChat.Repo
 
   @gamemode_names ~w(arena koth payload payloadrace ctf 5cp adcp tc medieval pd tr dm ultiduo rd pass mvm kotf dom default)
@@ -52,12 +53,25 @@ defmodule WhaleChat.MapsDb do
     is_admin = is_logged_in and admin?(steamid)
     can_edit_maps = is_logged_in and is_admin
     chart_bundle = popularity_chart_bundle()
+    viewer_profile =
+      case steamid do
+        sid when is_binary(sid) and sid != "" ->
+          SteamProfiles.fetch_many([sid])
+          |> Map.get(sid)
+          |> case do
+            %{} = profile -> %{personaname: profile["personaname"], avatar: profile["avatarfull"]}
+            _ -> nil
+          end
+        _ ->
+          nil
+      end
 
     %{
       maps_dir: cfg.maps_dir,
       maps_dir_missing: maps_dir_missing,
       is_logged_in: is_logged_in,
       current_steamid: steamid,
+      viewer_profile: viewer_profile,
       is_admin: is_admin,
       can_edit_maps: can_edit_maps,
       popular_maps: fetch_map_popularity(25),
