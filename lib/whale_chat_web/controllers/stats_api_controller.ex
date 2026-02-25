@@ -5,6 +5,9 @@ defmodule WhaleChatWeb.StatsApiController do
   alias WhaleChatWeb.StatsFragments
 
   def fetch_page(conn, params) do
+    performance_averages = StatsFeed.performance_averages()
+    logged_in = is_binary(get_session(conn, "steamid")) and get_session(conn, "steamid") != ""
+
     payload =
       StatsFeed.cumulative(%{
         q: Map.get(params, "q", ""),
@@ -28,7 +31,10 @@ defmodule WhaleChatWeb.StatsApiController do
     payload =
       payload
       |> Map.put(:html, StatsFragments.cumulative_fragment_html(payload, default_avatar_url: StatsFeed.default_avatar_url(), focused_player: Map.get(params, "player")))
-      |> Map.put(:focused_html, StatsFragments.focused_player_html(payload[:focused_player], StatsFeed.default_avatar_url()))
+      |> Map.put(:focused_html, StatsFragments.focused_player_html(payload[:focused_player], StatsFeed.default_avatar_url(),
+        performance_averages: performance_averages,
+        comparison_enabled: logged_in
+      ))
       |> Map.put(:success, Map.get(payload, :ok, false))
       |> Map.put(:totalRows, Map.get(payload, :total, 0))
       |> Map.put(:totalPages, Map.get(payload, :total_pages, 1))

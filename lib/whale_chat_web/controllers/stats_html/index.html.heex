@@ -11,15 +11,21 @@
       --border-color: rgba(142, 186, 255, 0.14);
     }
     .stats-shell { color: #edf1f8; }
+    .stats-shell { --stats-cumulative-surface: rgba(12, 16, 25, .70); }
     .stats-card {
-      background: linear-gradient(160deg, rgba(18, 23, 34, .62), rgba(11, 14, 22, .68));
+      background: linear-gradient(160deg, rgba(18, 23, 34, .850), rgba(11, 14, 22, .90));
       border: 1px solid var(--border-color, rgba(255,255,255,.10));
       border-radius: 18px;
       padding: 1.1rem 1.1rem 1rem;
       box-shadow: 0 18px 44px rgba(0,0,0,.30);
       backdrop-filter: blur(8px);
     }
-    .stats-home-row { margin-bottom: .75rem; }
+    .stats-home-row { margin: .25rem 0 .95rem; }
+    .stats-home-row .tab-controls { margin-bottom: 0; gap: .6rem; }
+    .stats-home-row .tab-button,
+    .stats-home-row .tab-button:link,
+    .stats-home-row .tab-button:visited { padding: .55rem 1.1rem; gap: .45rem; }
+    .stats-home-row .tab-button-count { padding: .14rem .52rem; font-size: .83rem; }
     .stats-home-btn {
       display:inline-flex; align-items:center; gap:.4rem;
       padding:.6rem 1rem; border-radius:999px; text-decoration:none;
@@ -31,10 +37,11 @@
     .stats-home-btn:hover { background: rgba(127, 200, 255, 0.28); }
     .stats-header-shell {
       margin-bottom: .9rem;
-      padding: .85rem .95rem;
-      border-radius: 16px;
-      background: linear-gradient(145deg, rgba(12, 17, 28, .56), rgba(20, 28, 43, .46));
-      border: 1px solid rgba(130, 170, 240, .10);
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
     }
     .stats-header-shell .header { margin: 0; }
     .stats-title-row {
@@ -45,13 +52,39 @@
     .stats-title-row h1 { margin:0; font-size:1.2rem; letter-spacing:.03em; }
     .stats-title-row h1 span { color: var(--accent, #7fc8ff); }
     .stats-sub { margin:.2rem 0 0; color:#b5bfd0; font-size:.9rem; }
+    .stats-sub a {
+      color: #f2a24a;
+      text-decoration: none;
+      text-shadow: 0 0 8px rgba(242, 162, 74, .28);
+    }
+    .stats-sub a:hover {
+      color: #ffc278;
+      text-shadow: 0 0 10px rgba(242, 162, 74, .4);
+    }
     .stats-auth { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:flex-end; }
     .stats-header-shell .header-actions { gap: .75rem; }
     .stats-header-shell .header-user .steam-logout { margin-top: 0; }
+    .stats-header-shell .header-user { gap: .9rem; }
+    .stats-header-shell .header-user-avatar {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+    }
+    .stats-header-shell .header-user-meta {
+      min-width: 0;
+      max-width: 100%;
+    }
+    .stats-header-shell .header-user-meta .stats-sub {
+      display: block;
+      font-size: .75rem;
+      line-height: 1.15;
+      word-break: break-all;
+      white-space: normal;
+    }
     .stats-summary-grid { border-top:1px solid rgba(255,255,255,.06); padding-top:.85rem; }
     .stats-summary-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:.75rem; margin-bottom: .95rem; }
     .stats-summary-item {
-      background: rgba(13, 18, 29, .60);
+      background: rgba(20, 25, 36, .50);
       border:1px solid var(--border-color, rgba(255,255,255,.08));
       border-radius:14px;
       padding:.75rem .85rem;
@@ -59,20 +92,39 @@
     }
     .stats-summary-item .label { font-size:.72rem; color:#aab4c6; text-transform:uppercase; letter-spacing:.06em; }
     .stats-summary-item .value { margin-top:.25rem; font-size:1.03rem; font-weight:700; color:#f3f7ff; }
+    .stat-card,
+    .stat-card * { min-width: 0; }
+    .stat-card > p,
+    .stat-card-value,
+    .stat-card-metric-value {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.15;
+    }
+    .stat-card > p {
+      font-size: clamp(1.2rem, 2.2vw, 1.9rem);
+      margin: .25rem 0 0;
+    }
     .stats-focused-slot { margin-bottom: .7rem; }
     .stats-focused-slot .detail-panel {
-      margin-top: 0;
-      background: linear-gradient(160deg, rgba(12, 17, 27, .58), rgba(19, 25, 37, .52));
+      margin-top: .35rem;
+      padding: 2.15rem 2rem;
       border-color: rgba(142,186,255,.12);
       box-shadow: 0 12px 34px rgba(0,0,0,.22);
+      min-height: 360px;
     }
-    .stats-focused-slot .detail-grid > div {
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.05);
-      border-radius: 10px;
-      padding: .5rem .6rem;
+    .stats-focused-slot .detail-panel .detail-profile { gap: 1rem; }
+    .stats-focused-slot .detail-panel .detail-profile img { width: 140px; height: 140px; }
+    .stats-focused-slot .detail-panel .detail-profile > div { min-width: 0; }
+    .stats-focused-slot .detail-panel .detail-grid { gap: 1.25rem 1.5rem; }
+    .stats-focused-slot .detail-panel .detail-grid > div { min-width: 0; }
+    .stats-focused-slot .detail-panel .detail-grid h3 { margin-bottom: .5rem; }
+    .stats-focused-slot .detail-panel .detail-grid p { margin: 0; font-size: clamp(1.08rem, 2vw, 1.55rem); }
+    .stats-card .stat-grid .stat-card {
+      background: rgba(20, 25, 36, .25);
+      border: 1px solid rgba(142,186,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
     }
-    .stats-focused-slot .detail-grid > div p { margin: .15rem 0 0; }
     .stats-tabs { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.8rem; }
     .stats-tab-btn { appearance:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); color:#e8eefb; border-radius:999px; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
     .stats-tab-btn.is-active { background:rgba(102,181,255,.15); border-color:rgba(102,181,255,.45); color:#dff1ff; }
@@ -135,7 +187,7 @@
     .stats-cumulative-fragment-host .table-wrapper {
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 14px;
-      background: linear-gradient(180deg, rgba(10, 14, 24, .56), rgba(14, 19, 30, .52));
+      background: var(--stats-cumulative-surface);
       overflow: auto;
     }
     .stats-cumulative-fragment-host #stats-table-cumulative thead th {
@@ -158,7 +210,7 @@
     .stats-cumulative-fragment-host #stats-table-cumulative .admin-name { color: #ffd67b; }
     .stats-cumulative-fragment-host #stats-table-cumulative .online-name { color: #9ce8b0; }
     .stats-cumulative-fragment-host .search-bar input[type="text"] {
-      background: rgba(12, 16, 25, .78);
+      background: var(--stats-cumulative-surface);
       border-color: rgba(142,186,255,.12);
     }
     .stats-cumulative-fragment-host .search-bar button {
@@ -188,10 +240,6 @@
   </style>
 
   <div class="stats-shell">
-    <div class="stats-home-row">
-      <a href="/" class="stats-home-btn">Return to Home</a>
-    </div>
-
     <div class="stats-card">
       <div class="stats-header-shell">
         <header class="header">
@@ -212,7 +260,7 @@
                   />
                   <div class="header-user-meta">
                     <span class="header-user-name">{@viewer_profile[:personaname] || @steamid}</span>
-                    <span class="stats-sub" style="margin:0;font-size:.78rem;">{String.slice(@steamid || "", 0, 8)}…</span>
+                    <span class="stats-sub" style="margin:0;">{@steamid || ""}</span>
                   </div>
                 <% else %>
                   <span class="stats-sub" style="margin:0;">Signed in</span>
@@ -229,27 +277,212 @@
       <div class="stats-title-row">
         <div>
           <h1>WhaleTracker <span>Stats</span> (Elixir)</h1>
-          <p class="stats-sub">Phoenix port of `/var/www/kogasatopia/stats` using the same MySQL data.</p>
+          <p class="stats-sub">Powered by <a href="https://www.phoenixframework.org/">Phoenix.</a></p>
         </div>
       </div>
 
-      <div class="stats-summary-grid">
-        <div class="stats-summary-item"><div class="label">Players</div><div class="value">{number_format(@summary[:total_players] || 0)}</div></div>
-        <div class="stats-summary-item"><div class="label">Kills</div><div class="value">{number_format(@summary[:total_kills] || 0)}</div></div>
-        <div class="stats-summary-item"><div class="label">Playtime</div><div class="value">{(@summary[:total_playtime_hours] || 0) |> to_string()}h</div></div>
-        <div class="stats-summary-item"><div class="label">Damage</div><div class="value">{number_format(@summary[:total_damage] || 0)}</div></div>
-        <div class="stats-summary-item"><div class="label">Healing</div><div class="value">{number_format(@summary[:total_healing] || 0)}</div></div>
-        <div class="stats-summary-item"><div class="label">Avg DPM</div><div class="value">{(@summary[:average_dpm] || 0) |> to_string()}</div></div>
+      <div class="stats-home-row">
+        <div class="tab-controls">
+          <a href="/" class="tab-button">
+            <span class="tab-button-label tab-button-label--desktop">Return to Home</span>
+            <span class="tab-button-label tab-button-label--mobile">Home</span>
+          </a>
+          <a href="/online" class="tab-button">
+            <span class="tab-button-label tab-button-label--desktop">Online Now</span>
+            <span class="tab-button-label tab-button-label--mobile">Online</span>
+            <span class="tab-button-count" id="nav-online-count" aria-live="polite">0 / 32</span>
+          </a>
+          <a href="https://kogasa.tf/stats/logs/current/" class="tab-button" target="_blank" rel="noopener">
+            <span class="tab-button-label tab-button-label--desktop">Match Logs</span>
+            <span class="tab-button-label tab-button-label--mobile">Logs</span>
+          </a>
+          <a href="/chat" class="tab-button">
+            <span class="tab-button-label tab-button-label--desktop">Chat</span>
+            <span class="tab-button-label tab-button-label--mobile">Chat</span>
+            <span class="tab-button-count" id="nav-chat-label" aria-live="polite">Last msg. --</span>
+          </a>
+          <a href="/mapsdb" class="tab-button">
+            <span class="tab-button-label tab-button-label--desktop">MapsDB</span>
+            <span class="tab-button-label tab-button-label--mobile">MapsDB</span>
+          </a>
+          <%= if @tab_hash do %>
+            <span class="tab-hash" title="Build Hash">#{@tab_hash}</span>
+          <% end %>
+        </div>
       </div>
+
+      <div class="stats-focused-slot" id="stats-focused-player">
+        <%= Phoenix.HTML.raw(@focused_html || "") %>
+      </div>
+
+      <% s = @summary || %{} %>
+      <% month_label = map_get(s, :playtime_month_label, "Month") %>
+      <% whales_week_tooltip = summary_week_tooltip(s) %>
+      <% whales_week_trend_class = summary_week_trend_class(s) %>
+      <% whales_week_change_label = summary_week_change_label(s) %>
+      <section class="stat-grid">
+        <div class="stat-card stat-card--whales" title={whales_week_tooltip}>
+          <h3>Total Whales</h3>
+          <div class="whales-breakdown">
+            <div class="whales-row">
+              <span class="whales-label">All time:</span>
+              <span class="whales-value">{number_format(map_get(s, :total_players, 0))}</span>
+            </div>
+            <div class="whales-row">
+              <span class="whales-label">Month:</span>
+              <span class="whales-value">{number_format(map_get(s, :players_current_month, 0))}</span>
+              <span class={whales_week_trend_class} aria-label="Monthly change not computed">—</span>
+            </div>
+            <div class="whales-row">
+              <span class="whales-label">Week:</span>
+              <span class="whales-value">{number_format(map_get(s, :players_current_week, 0))}</span>
+              <span class={whales_week_trend_class}>{whales_week_change_label}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Kills</h3>
+          <p>{number_format(map_get(s, :total_kills, 0))}</p>
+        </div>
+
+        <div class="stat-card stat-card--month" title={"Playtime logged in #{month_label}"}>
+          <div class="stat-card-heading">
+            <h3>Playtime / {month_label}</h3>
+          </div>
+          <p>{format_decimal(map_get(s, :playtime_month_hours, 0.0), 1)} hrs</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Healing</h3>
+          <p>{number_format(map_get(s, :total_healing, 0))}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Headshots</h3>
+          <p>{number_format(map_get(s, :total_headshots, 0))}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Backstabs</h3>
+          <p>{number_format(map_get(s, :total_backstabs, 0))}</p>
+        </div>
+
+        <div class="stat-card stat-card-streak">
+          <h3>Best Killstreak</h3>
+          <%= if owner = map_get(s, :top_killstreak_owner, nil) do %>
+            <div class="stat-card-player">
+              <img src={avatar_or_default(owner, @default_avatar_url)} alt="" />
+              <div>
+                <div class="stat-card-value">{number_format(map_get(s, :top_killstreak, 0))}</div>
+                <div class="stat-card-player-name">{display_name(owner)}</div>
+              </div>
+            </div>
+          <% else %>
+            <p>{number_format(map_get(s, :top_killstreak, 0))}</p>
+          <% end %>
+        </div>
+
+        <div class="stat-card stat-card-streak">
+          <h3>Best Killstreak / Week</h3>
+          <% leaders = map_get(s, :best_killstreak_week_leaders, []) %>
+          <%= if leaders != [] do %>
+            <div class="streak-podium">
+              <%= for {leader, index} <- Enum.with_index(Enum.take(leaders, 3)) do %>
+                <% rank = index + 1 %>
+                <div class={"streak-podium__entry streak-podium__entry--rank#{rank}"}>
+                  <div class="streak-podium__avatar-wrap">
+                    <img src={avatar_or_default(leader, @default_avatar_url)} alt="" />
+                    <span class="streak-podium__badge">{rank}</span>
+                  </div>
+                  <div class="streak-podium__details">
+                    <div class="streak-podium__name">{display_name(leader)}</div>
+                    <div class="streak-podium__value">{number_format(map_get(leader, :best_streak, 0))}</div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <%= if map_get(s, :best_killstreak_week, 0) > 0 do %>
+              <p>{number_format(map_get(s, :best_killstreak_week, 0))}</p>
+            <% else %>
+              <p class="stat-card-empty">No data yet</p>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Damage</h3>
+          <p>{number_format(map_get(s, :total_damage, 0))}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Total Damage Taken</h3>
+          <p>{number_format(map_get(s, :total_damage_taken, 0))}</p>
+        </div>
+
+        <div class="stat-card stat-card-streak">
+          <h3>Highest DPM / Week</h3>
+          <%= if owner = map_get(s, :weekly_top_dpm_owner, nil) do %>
+            <div class="stat-card-player">
+              <img src={avatar_or_default(owner, @default_avatar_url)} alt="" />
+              <div>
+                <div class="stat-card-value">{format_decimal(map_get(s, :weekly_top_dpm, 0.0), 1)}</div>
+                <div class="stat-card-player-name">{display_name(owner)}</div>
+              </div>
+            </div>
+          <% else %>
+            <%= if map_get(s, :weekly_top_dpm, 0.0) > 0 do %>
+              <p>{format_decimal(map_get(s, :weekly_top_dpm, 0.0), 1)}</p>
+            <% else %>
+              <p class="stat-card-empty">No data yet</p>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="stat-card">
+          <h3>Average DPM</h3>
+          <p>{format_decimal(map_get(s, :average_dpm, 0.0), 1)}</p>
+        </div>
+
+        <div class="stat-card stat-card--drops">
+          <h3>Total Ubers</h3>
+          <div class="stat-card-metric-pair">
+            <div class="stat-card-metric">
+              <div class="stat-card-metric-label">Ubers Used</div>
+              <div class="stat-card-metric-value">{number_format(map_get(s, :total_ubers_used, 0))}</div>
+            </div>
+            <div class="stat-card-metric">
+              <div class="stat-card-metric-label">Ubers Dropped</div>
+              <div class="stat-card-metric-value">{number_format(map_get(s, :total_drops, 0))}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card stat-card--gamemodes">
+          <h3>Gamemodes</h3>
+          <% gamemode_top = map_get(s, :gamemode_top, []) %>
+          <%= if gamemode_top != [] do %>
+            <ol class="gamemode-list">
+              <%= for {mode, index} <- Enum.with_index(gamemode_top) do %>
+                <li class="gamemode-item">
+                  <span class="gamemode-rank">{index + 1}.</span>
+                  <span class="gamemode-name">{map_get(mode, :label, "Unknown")}</span>
+                  <span class="gamemode-share">{format_decimal(map_get(mode, :percentage, 0.0), 1)}%</span>
+                </li>
+              <% end %>
+            </ol>
+          <% else %>
+            <p class="stat-card-empty">Logs loading or unavailable...</p>
+          <% end %>
+        </div>
+      </section>
 
       <section class="stats-panel is-active" id="stats-panel-cumulative" data-panel="cumulative">
         <div class="stats-toolbar">
           <div class="stats-muted" id="stats-cumulative-meta">
             {number_format(@cumulative[:total] || 0)} players
           </div>
-        </div>
-        <div class="stats-focused-slot" id="stats-focused-player">
-          <%= Phoenix.HTML.raw(@focused_html || "") %>
         </div>
         <div class="stats-cumulative-fragment-host" id="stats-cumulative-fragment">
           <%= Phoenix.HTML.raw(@cumulative_html || "") %>
@@ -315,6 +548,8 @@
       };
 
       const els = {
+        navOnlineCount: document.getElementById('nav-online-count'),
+        navChatLabel: document.getElementById('nav-chat-label'),
         cumulativeMeta: document.getElementById('stats-cumulative-meta'),
         cumulativeFragment: document.getElementById('stats-cumulative-fragment'),
         focusedPlayer: document.getElementById('stats-focused-player'),
@@ -363,6 +598,63 @@
         if (!ts) return '';
         const d = new Date(Number(ts) * 1000);
         return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      }
+
+      function formatChatAge(diffSeconds) {
+        if (!Number.isFinite(diffSeconds) || diffSeconds < 0) return '--';
+        if (diffSeconds < 60) return 'now';
+        if (diffSeconds < 3600) {
+          const minutes = Math.max(1, Math.floor(diffSeconds / 60));
+          return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        }
+        if (diffSeconds < 86400) {
+          const hours = Math.max(1, Math.floor(diffSeconds / 3600));
+          return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+        }
+        if (diffSeconds < 604800) {
+          const days = Math.max(1, Math.floor(diffSeconds / 86400));
+          return `${days} day${days === 1 ? '' : 's'} ago`;
+        }
+        const weeks = Math.floor(diffSeconds / 604800);
+        if (weeks < 5) return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+        const months = Math.max(1, Math.floor(diffSeconds / 2629800));
+        return `${months} month${months === 1 ? '' : 's'} ago`;
+      }
+
+      async function updateNavCount() {
+        if (!els.navOnlineCount) return;
+        try {
+          const res = await fetch('/stats/online_summary.php', { cache: 'no-store' });
+          if (!res.ok) throw new Error('Request failed');
+          const payload = await res.json();
+          let count = Number(payload.player_count || 0);
+          let max = Number(payload.visible_max || payload.visible_max_players || 0);
+          if (!Number.isFinite(count) || count < 0) count = 0;
+          if (!Number.isFinite(max) || max <= 0) max = 32;
+          els.navOnlineCount.textContent = `${count} / ${max}`;
+        } catch (_) {
+          // ignore
+        }
+      }
+
+      async function updateChatAgeLabel() {
+        if (!els.navChatLabel) return;
+        try {
+          const res = await fetch(`/stats/chat.php?limit=1&alerts_only=1&t=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) throw new Error('Request failed');
+          const payload = await res.json();
+          const messages = Array.isArray(payload.messages) ? payload.messages : [];
+          if (!messages.length) {
+            els.navChatLabel.textContent = 'Last msg. --';
+            return;
+          }
+          const last = messages[messages.length - 1];
+          const createdAt = Number(last.created_at || 0);
+          const ageLabel = formatChatAge(Math.floor(Date.now() / 1000) - createdAt);
+          els.navChatLabel.textContent = `Last msg. ${ageLabel}`;
+        } catch (_) {
+          // ignore
+        }
       }
 
       function renderCumulative(payload) {
@@ -673,6 +965,10 @@
         }
       });
       initCumulativeSorting(document);
+      updateNavCount();
+      updateChatAgeLabel();
+      setInterval(updateNavCount, 10000);
+      setInterval(updateChatAgeLabel, 60000);
     })();
   </script>
 </Layouts.app>

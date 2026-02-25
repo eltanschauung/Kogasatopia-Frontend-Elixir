@@ -20,6 +20,7 @@ defmodule WhaleChat.StatsFeed do
 
     %{
       summary: summary(),
+      performance_averages: performance_averages(),
       cumulative: cumulative(%{q: search, page: page, per_page: per_page, player: player}),
       current_log: current_log(),
       default_avatar_url: default_avatar_url()
@@ -47,8 +48,7 @@ defmodule WhaleChat.StatsFeed do
       playtime_seconds = int(data["total_playtime"])
       total_damage = int(data["total_damage"])
       total_minutes = if playtime_seconds > 0, do: playtime_seconds / 60.0, else: 0.0
-
-      %{
+      base = %{
         total_players: int(data["total_players"]),
         total_kills: int(data["total_kills"]),
         total_assists: int(data["total_assists"]),
@@ -62,6 +62,10 @@ defmodule WhaleChat.StatsFeed do
         total_ubers_used: int(data["total_ubers_used"]),
         average_dpm: if(total_minutes > 0, do: Float.round(total_damage / total_minutes, 1), else: 0.0)
       }
+
+      base
+      |> Map.merge(summary_top_killstreak())
+      |> Map.merge(summary_insights())
     else
       _ -> %{}
     end
@@ -178,6 +182,56 @@ defmodule WhaleChat.StatsFeed do
       %{ok: true, rows: [log | _]} -> %{ok: true, log: log}
       _ -> %{ok: false, log: nil}
     end
+  end
+
+  def tab_hash do
+    sql = "SELECT COALESCE(MAX(last_seen), 0) AS recent, COUNT(*) AS total FROM #{@stats_table}"
+
+    case SQL.query(Repo, sql, []) do
+      {:ok, %{rows: [row], columns: cols}} ->
+        m = row_map(row, cols)
+        raw = "#{int(m["recent"])}:#{int(m["total"])}"
+        :crypto.hash(:sha, raw) |> Base.encode16(case: :lower) |> binary_part(0, 7)
+
+      _ ->
+        nil
+    end
+  rescue
+    _ -> nil
+  end
+
+  def performance_averages do
+    sql = """
+    SELECT COUNT(*) AS eligible,
+           AVG(CASE WHEN deaths > 0 THEN kills / NULLIF(deaths, 0) ELSE kills END) AS avg_kd,
+           AVG(damage_dealt) AS avg_damage,
+           AVG(airshots) AS avg_airshots,
+           AVG(healing) AS avg_healing,
+           AVG(CASE WHEN playtime > 0 THEN damage_dealt / (playtime / 60.0) END) AS avg_dpm,
+           AVG(CASE WHEN shots > 0 THEN hits / shots END) AS avg_accuracy
+    FROM #{@stats_table}
+    WHERE playtime >= 18000
+    """
+
+    case SQL.query(Repo, sql, []) do
+      {:ok, %{rows: [row], columns: cols}} ->
+        m = row_map(row, cols)
+
+        %{
+          eligible: int(m["eligible"]),
+          kd: floaty(m["avg_kd"]),
+          damage: floaty(m["avg_damage"]),
+          airshots: floaty(m["avg_airshots"]),
+          healing: floaty(m["avg_healing"]),
+          dpm: floaty(m["avg_dpm"]),
+          accuracy: floaty(m["avg_accuracy"]) * 100.0
+        }
+
+      _ ->
+        %{}
+    end
+  rescue
+    _ -> %{}
   end
 
   def fetch_player(nil), do: nil
@@ -381,6 +435,341 @@ defmodule WhaleChat.StatsFeed do
   end
 
   defp count_table(table), do: scalar_query("SELECT COUNT(*) FROM #{table}", [])
+
+  defp summary_top_killstreak do
+    favorite_class_expr = favorite_class_select_expr()
+
+    sql = """
+    SELECT steamid,
+           COALESCE(cached_personaname, personaname, steamid) AS personaname,
+           kills, deaths, assists, healing, headshots, backstabs,
+           COALESCE(best_killstreak, 0) AS best_killstreak,
+           COALESCE(playtime, 0) AS playtime,
+           COALESCE(damage_dealt, 0) AS damage_dealt,
+           COALESCE(damage_taken, 0) AS damage_taken,
+           COALESCE(shots, 0) AS shots,
+           COALESCE(hits, 0) AS hits,
+           COALESCE(total_ubers, 0) AS total_ubers,
+           COALESCE(medic_drops, 0) AS medic_drops,
+           COALESCE(uber_drops, COALESCE(medic_drops, 0)) AS uber_drops,
+           COALESCE(airshots, 0) AS airshots,
+           #{favorite_class_expr} AS favorite_class,
+           COALESCE(last_seen, 0) AS last_seen
+    FROM #{@stats_table}
+    ORDER BY COALESCE(best_killstreak, 0) DESC, kills DESC
+    LIMIT 1
+    """
+
+    case SQL.query(Repo, sql, []) do
+      {:ok, %{rows: [row], columns: cols}} ->
+        enriched =
+          row
+          |> row_map(cols)
+          |> then(&enrich_cumulative_rows([&1]))
+          |> List.first()
+
+        top_killstreak = if is_map(enriched), do: int(enriched[:best_killstreak]), else: 0
+
+        %{
+          top_killstreak: top_killstreak,
+          top_killstreak_owner: if(top_killstreak > 0, do: enriched, else: nil)
+        }
+
+      _ ->
+        %{top_killstreak: 0, top_killstreak_owner: nil}
+    end
+  rescue
+    _ -> %{top_killstreak: 0, top_killstreak_owner: nil}
+  end
+
+  defp summary_insights do
+    windows = summary_time_windows()
+
+    monthly_playtime_seconds =
+      scalar_query(
+        "SELECT COALESCE(SUM(duration), 0) FROM #{@logs_table} WHERE started_at >= ? AND started_at < ?",
+        [windows.month_start, windows.next_month_start]
+      )
+
+    players_current_month =
+      scalar_query(
+        """
+        SELECT COUNT(DISTINCT lp.steamid)
+        FROM #{@log_players_table} lp
+        INNER JOIN #{@logs_table} l ON l.log_id = lp.log_id
+        WHERE l.started_at >= ? AND l.started_at < ?
+        """,
+        [windows.month_start, windows.next_month_start]
+      )
+
+    weekly_player_sql = """
+    SELECT COUNT(DISTINCT lp.steamid)
+    FROM #{@log_players_table} lp
+    INNER JOIN #{@logs_table} l ON l.log_id = lp.log_id
+    WHERE l.started_at >= ? AND l.started_at < ?
+    """
+
+    players_current_week = scalar_query(weekly_player_sql, [windows.current_week_start, windows.now_ts])
+    players_previous_week = scalar_query(weekly_player_sql, [windows.previous_week_start, windows.current_week_start])
+
+    {players_week_change_percent, players_week_trend} =
+      cond do
+        players_previous_week > 0 ->
+          pct = ((players_current_week - players_previous_week) / players_previous_week) * 100.0
+
+          trend =
+            cond do
+              pct > 0.5 -> "up"
+              pct < -0.5 -> "down"
+              true -> "flat"
+            end
+
+          {pct, trend}
+
+        players_current_week > 0 ->
+          {nil, "up"}
+
+        true ->
+          {nil, "flat"}
+      end
+
+    {best_killstreak_week, best_killstreak_week_leaders} = weekly_killstreak_podium(windows.current_week_start)
+    {weekly_top_dpm, weekly_top_dpm_owner} = weekly_top_dpm(windows.current_week_start)
+
+    %{
+      playtime_month_hours: Float.round(monthly_playtime_seconds / 3600.0, 1),
+      playtime_month_label: windows.month_label,
+      players_current_week: players_current_week,
+      players_current_month: players_current_month,
+      players_previous_week: players_previous_week,
+      players_week_change_percent: players_week_change_percent,
+      players_week_trend: players_week_trend,
+      best_killstreak_week: best_killstreak_week,
+      best_killstreak_week_leaders: best_killstreak_week_leaders,
+      weekly_top_dpm: weekly_top_dpm,
+      weekly_top_dpm_owner: weekly_top_dpm_owner,
+      gamemode_top: gamemode_top()
+    }
+  rescue
+    e ->
+      Logger.error("StatsFeed.summary_insights failed: " <> Exception.format(:error, e, __STACKTRACE__))
+
+      %{
+        playtime_month_hours: 0.0,
+        playtime_month_label: "Month",
+        players_current_week: 0,
+        players_current_month: 0,
+        players_previous_week: 0,
+        players_week_change_percent: nil,
+        players_week_trend: "flat",
+        best_killstreak_week: 0,
+        best_killstreak_week_leaders: [],
+        weekly_top_dpm: 0.0,
+        weekly_top_dpm_owner: nil,
+        gamemode_top: []
+      }
+  end
+
+  defp weekly_killstreak_podium(week_start_ts) do
+    sql = """
+    SELECT lp.log_id,
+           lp.steamid,
+           lp.personaname,
+           COALESCE(lp.best_streak, 0) AS best_streak,
+           COALESCE(lp.kills, 0) AS kills,
+           l.started_at
+    FROM #{@log_players_table} lp
+    INNER JOIN #{@logs_table} l ON l.log_id = lp.log_id
+    WHERE l.started_at >= ?
+      AND lp.log_id = (
+        SELECT lp2.log_id
+        FROM #{@log_players_table} lp2
+        INNER JOIN #{@logs_table} l2 ON l2.log_id = lp2.log_id
+        WHERE lp2.steamid = lp.steamid
+          AND l2.started_at >= ?
+        ORDER BY COALESCE(lp2.best_streak, 0) DESC, COALESCE(lp2.kills, 0) DESC, l2.started_at DESC
+        LIMIT 1
+      )
+    ORDER BY COALESCE(lp.best_streak, 0) DESC, COALESCE(lp.kills, 0) DESC, l.started_at DESC
+    LIMIT 3
+    """
+
+    rows =
+      case SQL.query(Repo, sql, [week_start_ts, week_start_ts]) do
+        {:ok, %{rows: rs, columns: cols}} -> Enum.map(rs, &row_map(&1, cols))
+        _ -> []
+      end
+
+    rows = Enum.filter(rows, fn row -> int(row["best_streak"]) > 0 end)
+
+    if rows == [] do
+      {0, []}
+    else
+      steamids =
+        rows
+        |> Enum.map(&str(&1["steamid"]))
+        |> Enum.reject(&(&1 == ""))
+        |> Enum.uniq()
+
+      profiles = SteamProfiles.fetch_many(steamids)
+      default_avatar = default_avatar_url()
+
+      leaders =
+        Enum.map(rows, fn row ->
+          steamid = str(row["steamid"])
+          profile = profiles[steamid] || %{}
+
+          %{
+            steamid: steamid,
+            personaname: str(profile["personaname"]) |> fallback_blank(str(row["personaname"]) |> fallback_blank(steamid)),
+            avatar: str(profile["avatarfull"]) |> fallback_blank(default_avatar),
+            profileurl: "https://steamcommunity.com/profiles/" <> steamid,
+            best_streak: int(row["best_streak"]),
+            kills: int(row["kills"])
+          }
+        end)
+
+      {int(hd(leaders).best_streak), leaders}
+    end
+  rescue
+    _ -> {0, []}
+  end
+
+  defp weekly_top_dpm(week_start_ts) do
+    sql = """
+    SELECT lp.steamid, lp.personaname, COALESCE(lp.damage, 0) AS damage, COALESCE(lp.playtime, 0) AS playtime
+    FROM #{@log_players_table} lp
+    INNER JOIN #{@logs_table} l ON l.log_id = lp.log_id
+    WHERE l.started_at >= ? AND COALESCE(lp.playtime, 0) > 0
+    ORDER BY (COALESCE(lp.damage, 0) * 60.0 / NULLIF(lp.playtime, 0)) DESC,
+             COALESCE(lp.damage, 0) DESC,
+             l.started_at DESC
+    LIMIT 1
+    """
+
+    case SQL.query(Repo, sql, [week_start_ts]) do
+      {:ok, %{rows: [row], columns: cols}} ->
+        m = row_map(row, cols)
+        playtime = int(m["playtime"])
+        damage = int(m["damage"])
+
+        if playtime > 0 do
+          steamid = str(m["steamid"])
+          dpm = Float.round((damage * 60.0) / playtime, 1)
+          profile = SteamProfiles.fetch_many([steamid])[steamid] || %{}
+          default_avatar = default_avatar_url()
+
+          owner = %{
+            steamid: steamid,
+            personaname: str(profile["personaname"]) |> fallback_blank(str(m["personaname"]) |> fallback_blank(steamid)),
+            avatar: str(profile["avatarfull"]) |> fallback_blank(default_avatar),
+            profileurl: "https://steamcommunity.com/profiles/" <> steamid
+          }
+
+          {dpm, owner}
+        else
+          {0.0, nil}
+        end
+
+      _ ->
+        {0.0, nil}
+    end
+  rescue
+    _ -> {0.0, nil}
+  end
+
+  defp gamemode_top do
+    sql = """
+    SELECT gamemode, COUNT(*) AS mode_count
+    FROM #{@logs_table}
+    WHERE gamemode IS NOT NULL AND gamemode <> ''
+    GROUP BY gamemode
+    """
+
+    rows =
+      case SQL.query(Repo, sql, []) do
+        {:ok, %{rows: rs, columns: cols}} -> Enum.map(rs, &row_map(&1, cols))
+        _ -> []
+      end
+
+    total = Enum.reduce(rows, 0, fn row, acc -> acc + int(row["mode_count"]) end)
+
+    rows
+    |> Enum.sort_by(fn row -> {-int(row["mode_count"]), str(row["gamemode"])} end)
+    |> Enum.take(3)
+    |> Enum.map(fn row ->
+      count = int(row["mode_count"])
+
+      %{
+        label: format_gamemode_label(str(row["gamemode"])),
+        count: count,
+        percentage: if(total > 0, do: Float.round(count * 100.0 / total, 1), else: 0.0)
+      }
+    end)
+  rescue
+    _ -> []
+  end
+
+  defp summary_time_windows do
+    sql = """
+    SELECT
+      UNIX_TIMESTAMP(NOW()) AS now_ts,
+      UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AS current_week_start,
+      UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 14 DAY)) AS previous_week_start,
+      UNIX_TIMESTAMP(DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')) AS month_start,
+      UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 MONTH), '%Y-%m-01 00:00:00')) AS next_month_start,
+      DATE_FORMAT(NOW(), '%M') AS month_label
+    """
+
+    case SQL.query(Repo, sql, []) do
+      {:ok, %{rows: [row], columns: cols}} ->
+        m = row_map(row, cols)
+
+        %{
+          now_ts: int(m["now_ts"]),
+          current_week_start: int(m["current_week_start"]),
+          previous_week_start: int(m["previous_week_start"]),
+          month_start: int(m["month_start"]),
+          next_month_start: int(m["next_month_start"]),
+          month_label: fallback_blank(str(m["month_label"]), "Month")
+        }
+
+      _ ->
+        now = System.system_time(:second)
+        %{now_ts: now, current_week_start: now - 7 * 86_400, previous_week_start: now - 14 * 86_400, month_start: 0, next_month_start: now, month_label: "Month"}
+    end
+  rescue
+    _ ->
+      now = System.system_time(:second)
+      %{now_ts: now, current_week_start: now - 7 * 86_400, previous_week_start: now - 14 * 86_400, month_start: 0, next_month_start: now, month_label: "Month"}
+  end
+
+  defp format_gamemode_label(gamemode) do
+    case gamemode |> str() |> String.trim() |> String.downcase() do
+      "" -> "Unknown"
+      "koth" -> "Koth"
+      "king of the hill" -> "Koth"
+      "payload" -> "Payload"
+      "payload race" -> "Payload Race"
+      "payload - race" -> "Payload Race"
+      "cp" -> "CP"
+      "control point" -> "Control Point"
+      "attack/defend cp" -> "Attack/Defend"
+      "attack/defend" -> "Attack/Defend"
+      "arena" -> "Arena"
+      "mge" -> "MGE"
+      "ctf" -> "CTF"
+      "mann vs machine" -> "MvM"
+      "rd" -> "Robot Destruction"
+      "passtime" -> "Pass Time"
+      other when byte_size(other) <= 3 -> String.upcase(other)
+      other -> other |> String.split() |> Enum.map_join(" ", &String.capitalize/1)
+    end
+  end
+
+  defp fallback_blank("", default), do: default
+  defp fallback_blank(nil, default), do: default
+  defp fallback_blank(v, _default), do: v
 
   defp favorite_class_select_expr do
     if favorite_class_supported?(), do: "COALESCE(favorite_class, 0)", else: "0"
@@ -600,6 +989,7 @@ defmodule WhaleChat.StatsFeed do
   defp int(nil), do: 0
   defp int(v) when is_integer(v), do: v
   defp int(v) when is_float(v), do: trunc(v)
+  defp int(%Decimal{} = v), do: v |> Decimal.round(0) |> Decimal.to_integer()
 
   defp int(v) when is_binary(v) do
     case Integer.parse(v) do
@@ -607,6 +997,22 @@ defmodule WhaleChat.StatsFeed do
       :error -> 0
     end
   end
-
   defp int(_), do: 0
+
+  defp floaty(nil), do: 0.0
+  defp floaty(v) when is_float(v), do: v
+  defp floaty(v) when is_integer(v), do: v / 1
+  defp floaty(%Decimal{} = v), do: Decimal.to_float(v)
+  defp floaty(v) when is_binary(v) do
+    case Float.parse(v) do
+      {f, _} -> f
+      :error ->
+        case Integer.parse(v) do
+          {i, _} -> i / 1
+          :error -> 0.0
+        end
+    end
+  end
+  defp floaty(_), do: 0.0
+
 end

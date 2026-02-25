@@ -17,12 +17,17 @@ defmodule WhaleChatWeb.StatsController do
 
     render(conn, :index,
       summary: payload.summary,
+      performance_averages: payload.performance_averages,
       cumulative: cumulative,
       current_log: payload.current_log,
       default_avatar_url: default_avatar,
       cumulative_html: StatsFragments.cumulative_fragment_html(cumulative, default_avatar_url: default_avatar, focused_player: focused_player),
-      focused_html: StatsFragments.focused_player_html(cumulative[:focused_player], default_avatar),
+      focused_html: StatsFragments.focused_player_html(cumulative[:focused_player], default_avatar,
+        performance_averages: payload.performance_averages,
+        comparison_enabled: is_binary(session_steamid) and session_steamid != ""
+      ),
       current_log_html: StatsFragments.current_log_fragment_html(payload.current_log, default_avatar_url: default_avatar),
+      tab_hash: StatsFeed.tab_hash(),
       search: search,
       focused_player: focused_player,
       steamid: session_steamid,
