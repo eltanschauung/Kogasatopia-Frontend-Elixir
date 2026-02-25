@@ -28,5 +28,10 @@ project.md
 phoenix_webserver_explanation.txt
 AGENTS.md
 
+# Cached assets / mirrored PHP cache directories
+/priv/static/cache/
+/stats/cache/
+/web/stats/cache/
+
 # Ignore package tarball (built via "mix hex.build").
 whale_chat-*.tar
