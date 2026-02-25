@@ -6,7 +6,7 @@
     <title>WhaleTracker MapsDB (Elixir)</title>
     <link rel="stylesheet" href="/stats/css/whaletracker.css" />
     <style>
-      body { margin: 0; background: var(--bg-color, #0f1118) url('/stats/background_product_pro.jpg') center/cover fixed; }
+      body { margin: 0; }
       .mapsdb-page { min-height: 100vh; padding: 2.5rem; display: flex; justify-content: center; }
       .mapsdb-card { width: min(1200px, 100%); background: var(--panel-bg, rgba(18,20,28,.92)); border-radius: 18px; padding: 2rem; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 20px 45px rgba(0,0,0,.55); }
       .mapsdb-page-actions { display:flex; margin-bottom: .9rem; }
@@ -23,11 +23,11 @@
       .mapsdb-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.25rem; }
       .mapsdb-stats { display:flex; gap:.8rem; align-items:center; }
       .mapsdb-layout { display:grid; grid-template-columns:minmax(280px,.4fr) minmax(360px,.6fr); gap:1.1rem; }
-      .map-panel, .map-editor { background: rgba(16,17,23,.9); border-radius:16px; border:1px solid rgba(255,255,255,.08); padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
+      .map-panel, .map-editor { background: rgba(16,17,23,.6); border-radius:16px; border:1px solid rgba(255,255,255,.08); padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
       .map-panel { max-height:70vh; }
       .map-panel input { width:100%; padding:.6rem .9rem; border-radius:12px; border:1px solid rgba(255,255,255,.15); background: rgba(27,31,43,.9); color:#f5f6fa; }
       .map-list { overflow-y:auto; display:flex; flex-direction:column; gap:.45rem; max-height:100%; }
-      .map-section { border:1px solid rgba(255,255,255,.07); border-radius:12px; background: rgba(20,22,30,.9); padding:.45rem .65rem .35rem; }
+      .map-section { border:1px solid rgba(255,255,255,.07); border-radius:12px; background: rgba(20,22,30,.5); padding:.45rem .65rem .35rem; }
       .map-section summary { list-style:none; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; }
       .map-section summary::-webkit-details-marker { display:none; }
       .map-section-body { margin-top:.65rem; display:flex; flex-direction:column; gap:.4rem; }
@@ -40,23 +40,23 @@
       .map-editor-toolbar button:disabled { opacity:.4; cursor:not-allowed; }
       #map-content { flex:1; width:100%; background: rgba(17,18,25,.95); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:1rem; color:#f5f6fa; font-family: monospace; font-size:.95rem; resize:none; min-height:420px; }
       .map-editor-status, .mass-edit-status { font-size:.9rem; color: var(--text-muted, #95a5b7); }
-      .map-popularity { border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:.75rem; background: rgba(10,12,20,.9); display:flex; flex-direction:column; gap:.45rem; }
+      .map-popularity { border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:.75rem; background: rgba(10,12,20,.5); display:flex; flex-direction:column; gap:.45rem; }
       .map-popularity-header { display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; }
       .map-popularity-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.35rem; max-height:280px; overflow-y:auto; }
       .map-popularity-entry { display:flex; justify-content:space-between; align-items:center; padding:.35rem .2rem; border-bottom:1px solid rgba(255,255,255,.05); font-size:.92rem; }
       .map-popularity-entry:last-child { border-bottom:none; }
       .map-popularity-count { font-weight:600; color: var(--accent, #7fc8ff); }
       .mapsdb-alert { margin: .75rem 0; padding:.75rem .9rem; border-radius:10px; background: rgba(255, 193, 7, .12); border:1px solid rgba(255,193,7,.28); }
-      .mass-edit-card { margin-top:1.25rem; padding:1rem 1.15rem; border-radius:16px; border:1px solid rgba(255,255,255,.08); background: rgba(12,14,21,.92); }
+      .mass-edit-card { margin-top:1.25rem; padding:1rem 1.15rem; border-radius:16px; border:1px solid rgba(255,255,255,.08); background: rgba(12,14,21,.7); }
       .mass-edit-card form { display:flex; flex-direction:column; gap:.55rem; }
       .mass-edit-card textarea { width:100%; min-height:80px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background: rgba(17,19,28,.9); color:#f5f6fa; padding:.6rem .75rem; }
       .mass-edit-card button { align-self:flex-start; padding:.5rem 1rem; border-radius:999px; border:none; background: var(--accent, #7fc8ff); color:#04142a; font-weight:600; cursor:pointer; }
-      .map-preview-wall { margin-top:1.2rem; padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,.08); background: rgba(12,14,21,.9); }
+      .map-preview-wall { margin-top:1.2rem; padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,.08); background: rgba(12,14,21,.6); }
       .map-preview-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
       .map-preview-card { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
       .map-preview-card img { width:160px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.25); }
       .map-preview-title { font-size:13px; font-weight:600; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .popularity-card { border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:1rem; background: rgba(12,14,21,.9); margin-bottom:1rem; }
+      .popularity-card { border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:1rem; background: rgba(12,14,21,.5); margin-bottom:1rem; }
       .popularity-title { margin:0; font-size:1.2rem; }
       .popularity-sub { margin:.25rem 0 0; color: var(--text-muted, #95a5b7); }
       .popularity-controls { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.55rem; }

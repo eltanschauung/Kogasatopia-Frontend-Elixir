@@ -20,7 +20,7 @@ defmodule WhaleChatWeb.Endpoint do
     at: "/stats",
     from: "/var/www/kogasatopia/stats",
     gzip: false,
-    only: ~w(assets css background_product_pro.jpg)
+    only: ~w(assets css)
 
   plug Plug.Static,
     at: "/",

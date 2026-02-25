@@ -32,6 +32,8 @@ body {
   color: var(--wc-text);
   font-family: "Trebuchet MS", Verdana, sans-serif;
   background:
+    linear-gradient(rgba(12, 14, 20, 0.35), rgba(12, 14, 20, 0.35)),
+    url("/stats/assets/background_product_pro.jpg") center / cover fixed,
     radial-gradient(circle at 15% 10%, rgba(106, 129, 180, 0.14), transparent 42%),
     radial-gradient(circle at 85% 20%, rgba(250, 218, 132, 0.12), transparent 45%),
     linear-gradient(180deg, var(--wc-bg), var(--wc-bg-2));

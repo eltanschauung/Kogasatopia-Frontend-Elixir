@@ -1,0 +1,678 @@
+<Layouts.app flash={@flash} wide={true}>
+  <link rel="stylesheet" href="/stats/css/whaletracker.css">
+  <style>
+    :root {
+      --bg-color: #0b1019;
+      --panel-bg: rgba(15, 20, 31, 0.78);
+      --accent: #66b5ff;
+      --accent-soft: rgba(102, 181, 255, 0.22);
+      --text-primary: #f2f6ff;
+      --text-muted: #9bb0c9;
+      --border-color: rgba(142, 186, 255, 0.14);
+    }
+    .stats-shell { color: #edf1f8; }
+    .stats-card {
+      background: linear-gradient(160deg, rgba(18, 23, 34, .62), rgba(11, 14, 22, .68));
+      border: 1px solid var(--border-color, rgba(255,255,255,.10));
+      border-radius: 18px;
+      padding: 1.1rem 1.1rem 1rem;
+      box-shadow: 0 18px 44px rgba(0,0,0,.30);
+      backdrop-filter: blur(8px);
+    }
+    .stats-home-row { margin-bottom: .75rem; }
+    .stats-home-btn {
+      display:inline-flex; align-items:center; gap:.4rem;
+      padding:.6rem 1rem; border-radius:999px; text-decoration:none;
+      border:1px solid var(--border-color, rgba(255,255,255,.14));
+      background: rgba(127, 200, 255, 0.16);
+      color:#eef3ff; font-weight:600;
+      box-shadow: 0 6px 18px rgba(0,0,0,.20);
+    }
+    .stats-home-btn:hover { background: rgba(127, 200, 255, 0.28); }
+    .stats-header-shell {
+      margin-bottom: .9rem;
+      padding: .85rem .95rem;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(12, 17, 28, .56), rgba(20, 28, 43, .46));
+      border: 1px solid rgba(130, 170, 240, .10);
+    }
+    .stats-header-shell .header { margin: 0; }
+    .stats-title-row {
+      display:flex; flex-wrap:wrap; justify-content:space-between; gap:.8rem;
+      align-items:flex-start; margin-bottom:.8rem;
+      padding: .1rem .15rem 0;
+    }
+    .stats-title-row h1 { margin:0; font-size:1.2rem; letter-spacing:.03em; }
+    .stats-title-row h1 span { color: var(--accent, #7fc8ff); }
+    .stats-sub { margin:.2rem 0 0; color:#b5bfd0; font-size:.9rem; }
+    .stats-auth { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:flex-end; }
+    .stats-header-shell .header-actions { gap: .75rem; }
+    .stats-header-shell .header-user .steam-logout { margin-top: 0; }
+    .stats-summary-grid { border-top:1px solid rgba(255,255,255,.06); padding-top:.85rem; }
+    .stats-summary-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:.75rem; margin-bottom: .95rem; }
+    .stats-summary-item {
+      background: rgba(13, 18, 29, .60);
+      border:1px solid var(--border-color, rgba(255,255,255,.08));
+      border-radius:14px;
+      padding:.75rem .85rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .stats-summary-item .label { font-size:.72rem; color:#aab4c6; text-transform:uppercase; letter-spacing:.06em; }
+    .stats-summary-item .value { margin-top:.25rem; font-size:1.03rem; font-weight:700; color:#f3f7ff; }
+    .stats-focused-slot { margin-bottom: .7rem; }
+    .stats-focused-slot .detail-panel {
+      margin-top: 0;
+      background: linear-gradient(160deg, rgba(12, 17, 27, .58), rgba(19, 25, 37, .52));
+      border-color: rgba(142,186,255,.12);
+      box-shadow: 0 12px 34px rgba(0,0,0,.22);
+    }
+    .stats-focused-slot .detail-grid > div {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.05);
+      border-radius: 10px;
+      padding: .5rem .6rem;
+    }
+    .stats-focused-slot .detail-grid > div p { margin: .15rem 0 0; }
+    .stats-tabs { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.8rem; }
+    .stats-tab-btn { appearance:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); color:#e8eefb; border-radius:999px; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
+    .stats-tab-btn.is-active { background:rgba(102,181,255,.15); border-color:rgba(102,181,255,.45); color:#dff1ff; }
+    .stats-panel { display:none; }
+    .stats-panel.is-active { display:block; }
+    .stats-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; justify-content:space-between; align-items:center; margin-bottom:.65rem; }
+    .stats-search { display:flex; gap:.45rem; flex-wrap:wrap; }
+    .stats-search input, .stats-chat-form input { background:#10131c; border:1px solid rgba(255,255,255,.13); color:#eef1f8; border-radius:8px; padding:.55rem .65rem; }
+    .stats-search button, .stats-chat-form button, .stats-mini-btn { appearance:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#eef1f8; border-radius:8px; padding:.5rem .7rem; cursor:pointer; font-weight:600; }
+    .stats-mini-btn.is-active { background:rgba(124, 221, 143, .12); border-color:rgba(124,221,143,.4); }
+    .table-wrap { width:100%; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; background: rgba(15,18,26,.5); }
+    table.stats-grid { width:100%; min-width: 980px; border-collapse: collapse; }
+    .stats-grid th, .stats-grid td { padding:.45rem .5rem; border-top:1px solid rgba(255,255,255,.06); font-size:.84rem; text-align:right; white-space:nowrap; }
+    .stats-grid th { position: sticky; top:0; background: rgba(20,24,34,.97); z-index: 1; color:#b7c0d2; text-transform:uppercase; letter-spacing:.03em; font-size:.68rem; border-top:none; }
+    .stats-grid th:first-child, .stats-grid td:first-child { text-align:left; }
+    .stats-grid tr:hover td { background: rgba(90,140,210,.08); }
+    .stats-player-cell { display:flex; align-items:center; gap:.35rem; min-width: 0; }
+    .stats-player-cell img { width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,.12); flex:0 0 auto; }
+    .stats-player-cell a, .stats-player-cell span { color:inherit; text-decoration:none; display:inline-block; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .badge-admin { font-size:.65rem; color:#12161f; background:#ffcc66; border-radius:999px; padding:.12rem .35rem; font-weight:700; }
+    .stats-pagination { display:flex; gap:.4rem; align-items:center; justify-content:flex-end; margin-top:.65rem; flex-wrap:wrap; }
+    .stats-muted { color:#adb7c8; }
+    .stats-empty { color:#aeb8c9; padding:.75rem; text-align:center; }
+    .stats-chat-panel { border:1px solid rgba(255,255,255,.08); border-radius:12px; background:rgba(15,18,26,.5); padding:.6rem; }
+    .stats-chat-messages { max-height: 480px; overflow:auto; display:flex; flex-direction:column; gap:.45rem; }
+    .stats-chat-row { display:flex; gap:.45rem; align-items:flex-start; }
+    .stats-chat-row img { width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,.12); }
+    .stats-chat-header { display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; }
+    .stats-chat-name { font-weight:700; }
+    .stats-chat-time { color:#aeb7c8; font-size:.75rem; }
+    .stats-chat-text { white-space:pre-wrap; word-break:break-word; }
+    .stats-chat-form { display:flex; gap:.45rem; margin-top:.65rem; }
+    .stats-chat-form input { flex:1; }
+    .stats-chat-status { min-height: 1.1rem; margin-top:.35rem; color:#f2bf69; font-size:.82rem; }
+    .stats-online-cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:.65rem; margin-bottom:.7rem; }
+    .stats-online-card { display:flex; gap:.65rem; background:rgba(15,18,26,.5); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:.65rem; }
+    .stats-online-card img { width:160px; height:120px; border-radius:8px; object-fit:cover; background:#0c1016; border:1px solid rgba(255,255,255,.08); }
+    .stats-online-card h3 { margin:0 0 .25rem; font-size:.95rem; }
+    .stats-online-card p { margin:.15rem 0; color:#b5bfd0; font-size:.84rem; }
+    .team-red td { background: rgba(178,74,74,.12); }
+    .team-blue td { background: rgba(75,102,186,.12); }
+    .stats-logs-list { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:.65rem; }
+    .stats-log-card { background:rgba(15,18,26,.5); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:.7rem; }
+    .stats-log-card h4 { margin:0 0 .3rem; font-size:.92rem; }
+    .stats-log-card p { margin:.16rem 0; color:#b6c0d2; font-size:.82rem; }
+    .wt-cumulative-fragment .table-wrapper { margin-top: .5rem; }
+    .wt-cumulative-fragment .table-toolbar { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; margin-bottom:.55rem; }
+    .wt-cumulative-fragment .toolbar-spacer { flex: 1 1 auto; }
+    .wt-cumulative-fragment .toolbar-pagination .table-pagination-info { color:#b6bfd0; margin-right:.4rem; }
+    .wt-cumulative-fragment .table-pagination-controls { display:inline-flex; gap:.4rem; }
+    .wt-cumulative-fragment .table-pagination-button { display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:.35rem .6rem; border-radius:8px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); color:#eef1f8; text-decoration:none; }
+    .wt-cumulative-fragment .table-pagination-button.is-disabled { opacity:.45; }
+    .wt-cumulative-fragment th.sorted-asc::after, .wt-cumulative-fragment th.sorted-desc::after { content:''; display:inline-block; margin-left:6px; border:5px solid transparent; vertical-align:middle; }
+    .wt-cumulative-fragment th.sorted-asc::after { border-bottom-color:#7fc8ff; }
+    .wt-cumulative-fragment th.sorted-desc::after { border-top-color:#7fc8ff; }
+    .wt-cumulative-fragment .search-bar { display:flex; gap:.45rem; flex-wrap:wrap; align-items:center; }
+    .wt-cumulative-fragment .search-bar input { background:#10131c; border:1px solid rgba(255,255,255,.13); color:#eef1f8; border-radius:8px; padding:.55rem .65rem; min-width: 280px; }
+    .wt-cumulative-fragment .search-bar button { appearance:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#eef1f8; border-radius:8px; padding:.5rem .7rem; cursor:pointer; font-weight:600; }
+    .stats-cumulative-fragment-host .detail-panel { margin-bottom: .75rem; }
+    .stats-cumulative-fragment-host .table-wrapper {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(10, 14, 24, .56), rgba(14, 19, 30, .52));
+      overflow: auto;
+    }
+    .stats-cumulative-fragment-host #stats-table-cumulative thead th {
+      background: rgba(12, 17, 28, .92);
+      color: #b8c9e2;
+      border-bottom: 1px solid rgba(142,186,255,.10);
+    }
+    .stats-cumulative-fragment-host #stats-table-cumulative tbody td {
+      border-top-color: rgba(142,186,255,.06);
+    }
+    .stats-cumulative-fragment-host #stats-table-cumulative tbody tr:hover td { background: rgba(102, 181, 255, .08); }
+    .stats-cumulative-fragment-host #stats-table-cumulative tr.player-highlight td {
+      background: rgba(102, 181, 255, .14);
+      box-shadow: inset 0 0 0 9999px rgba(102,181,255,.025);
+    }
+    .stats-cumulative-fragment-host #stats-table-cumulative .player-cell img {
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .stats-cumulative-fragment-host #stats-table-cumulative .admin-name { color: #ffd67b; }
+    .stats-cumulative-fragment-host #stats-table-cumulative .online-name { color: #9ce8b0; }
+    .stats-cumulative-fragment-host .search-bar input[type="text"] {
+      background: rgba(12, 16, 25, .78);
+      border-color: rgba(142,186,255,.12);
+    }
+    .stats-cumulative-fragment-host .search-bar button {
+      background: rgba(102,181,255,.18);
+      border-color: rgba(102,181,255,.28);
+    }
+    .stats-cumulative-fragment-host .search-bar button:hover { background: rgba(102,181,255,.28); }
+    .wt-cumulative-fragment .table-pagination-button {
+      background: rgba(102,181,255,.08);
+      border-color: rgba(142,186,255,.14);
+    }
+    .wt-cumulative-fragment .table-pagination-button:hover:not(.is-disabled) {
+      background: rgba(102,181,255,.16);
+    }
+    .stats-current-log-wrap { margin-bottom:.75rem; }
+    #stats-current-log-container .log-entry.log-current { background: rgba(15,18,26,.5); border:1px solid rgba(255,255,255,.08); border-radius:12px; }
+    #stats-current-log-container .log-summary { display:flex; flex-wrap:wrap; gap:.45rem; align-items:center; padding:.6rem .7rem; }
+    #stats-current-log-container .log-body { padding:.6rem .7rem .75rem; }
+    .stats-tabs { display: none !important; }
+    #stats-panel-online, #stats-panel-chat, #stats-panel-logs { display: none !important; }
+    @media (max-width: 900px) {
+      table.stats-grid { min-width: 760px; }
+      .stats-chat-form { flex-direction:column; }
+      .stats-online-card { flex-direction:column; }
+      .stats-online-card img { width:100%; height:auto; aspect-ratio: 4 / 3; }
+    }
+  </style>
+
+  <div class="stats-shell">
+    <div class="stats-home-row">
+      <a href="/" class="stats-home-btn">Return to Home</a>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-header-shell">
+        <header class="header">
+          <div class="brand">
+            <img src="/stats/assets/whaletracker_logo.png" style="width:50%" alt="WhaleTracker logo">
+          </div>
+          <div class="animation">
+            <img src="/stats/assets/wholesome2.gif" alt="Wholesome">
+          </div>
+          <div class="header-actions stats-auth">
+            <%= if @logged_in do %>
+              <div class="header-user">
+                <%= if @viewer_profile do %>
+                  <img
+                    class="header-user-avatar"
+                    src={@viewer_profile[:avatar] || "/stats/assets/whaley-avatar.jpg"}
+                    alt=""
+                  />
+                  <div class="header-user-meta">
+                    <span class="header-user-name">{@viewer_profile[:personaname] || @steamid}</span>
+                    <span class="stats-sub" style="margin:0;font-size:.78rem;">{String.slice(@steamid || "", 0, 8)}…</span>
+                  </div>
+                <% else %>
+                  <span class="stats-sub" style="margin:0;">Signed in</span>
+                <% end %>
+              </div>
+              <a class="steam-logout" href="/stats/login.php?action=logout&return=/stats">Logout</a>
+            <% else %>
+              <a class="steam-login" href="/stats/login.php?return=/stats">Login with Steam</a>
+            <% end %>
+          </div>
+        </header>
+      </div>
+
+      <div class="stats-title-row">
+        <div>
+          <h1>WhaleTracker <span>Stats</span> (Elixir)</h1>
+          <p class="stats-sub">Phoenix port of `/var/www/kogasatopia/stats` using the same MySQL data.</p>
+        </div>
+      </div>
+
+      <div class="stats-summary-grid">
+        <div class="stats-summary-item"><div class="label">Players</div><div class="value">{number_format(@summary[:total_players] || 0)}</div></div>
+        <div class="stats-summary-item"><div class="label">Kills</div><div class="value">{number_format(@summary[:total_kills] || 0)}</div></div>
+        <div class="stats-summary-item"><div class="label">Playtime</div><div class="value">{(@summary[:total_playtime_hours] || 0) |> to_string()}h</div></div>
+        <div class="stats-summary-item"><div class="label">Damage</div><div class="value">{number_format(@summary[:total_damage] || 0)}</div></div>
+        <div class="stats-summary-item"><div class="label">Healing</div><div class="value">{number_format(@summary[:total_healing] || 0)}</div></div>
+        <div class="stats-summary-item"><div class="label">Avg DPM</div><div class="value">{(@summary[:average_dpm] || 0) |> to_string()}</div></div>
+      </div>
+
+      <section class="stats-panel is-active" id="stats-panel-cumulative" data-panel="cumulative">
+        <div class="stats-toolbar">
+          <div class="stats-muted" id="stats-cumulative-meta">
+            {number_format(@cumulative[:total] || 0)} players
+          </div>
+        </div>
+        <div class="stats-focused-slot" id="stats-focused-player">
+          <%= Phoenix.HTML.raw(@focused_html || "") %>
+        </div>
+        <div class="stats-cumulative-fragment-host" id="stats-cumulative-fragment">
+          <%= Phoenix.HTML.raw(@cumulative_html || "") %>
+        </div>
+      </section>
+
+      <section class="stats-panel" id="stats-panel-online" data-panel="online">
+        <div class="stats-toolbar">
+          <div class="stats-muted" id="stats-online-meta">Loading online data…</div>
+          <button type="button" class="stats-mini-btn" id="stats-online-refresh">Refresh</button>
+        </div>
+        <div class="stats-online-cards" id="stats-online-cards"></div>
+        <div class="table-wrap">
+          <table class="stats-grid" id="stats-online-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>K</th><th>D</th><th>K/D</th><th>Acc.</th><th>A</th><th>Damage</th><th>DPM</th><th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="stats-online-body"><tr><td colspan="9" class="stats-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="stats-panel" id="stats-panel-chat" data-panel="chat">
+        <div class="stats-toolbar">
+          <div class="stats-muted" id="stats-chat-meta">Loading chat…</div>
+          <button type="button" class="stats-mini-btn" id="stats-chat-refresh">Refresh</button>
+        </div>
+        <div class="stats-chat-panel">
+          <div class="stats-chat-messages" id="stats-chat-messages" aria-live="polite"></div>
+          <form class="stats-chat-form" id="stats-chat-form" autocomplete="off">
+            <input type="text" name="message" id="stats-chat-input" maxlength="180" placeholder="Type to send a chat message" required />
+            <button type="submit">Send</button>
+          </form>
+          <div class="stats-chat-status" id="stats-chat-status"></div>
+        </div>
+      </section>
+
+      <section class="stats-panel" id="stats-panel-logs" data-panel="logs">
+        <div class="stats-toolbar">
+          <div>
+            <button type="button" class="stats-mini-btn is-active" data-logs-scope="regular">Regular</button>
+            <button type="button" class="stats-mini-btn" data-logs-scope="short">Short (2-12p)</button>
+          </div>
+          <button type="button" class="stats-mini-btn" id="stats-logs-refresh">Refresh</button>
+        </div>
+        <div class="stats-current-log-wrap">
+          <div class="stats-muted" style="margin-bottom:.35rem;">Current Match Snapshot</div>
+          <div id="stats-current-log-container"><%= Phoenix.HTML.raw(@current_log_html || "") %></div>
+        </div>
+        <div class="stats-logs-list" id="stats-logs-list"></div>
+        <div class="stats-pagination" id="stats-logs-pagination"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const state = {
+        cumulative: { q: <%= Phoenix.HTML.raw(Jason.encode!(@search || "")) %>, page: <%= @cumulative[:page] || 1 %>, perPage: 50, focusedPlayer: <%= Phoenix.HTML.raw(Jason.encode!(@focused_player || "")) %> },
+      };
+
+      const els = {
+        cumulativeMeta: document.getElementById('stats-cumulative-meta'),
+        cumulativeFragment: document.getElementById('stats-cumulative-fragment'),
+        focusedPlayer: document.getElementById('stats-focused-player'),
+        onlineMeta: document.getElementById('stats-online-meta'),
+        onlineCards: document.getElementById('stats-online-cards'),
+        onlineBody: document.getElementById('stats-online-body'),
+        onlineRefresh: document.getElementById('stats-online-refresh'),
+        chatMeta: document.getElementById('stats-chat-meta'),
+        chatMessages: document.getElementById('stats-chat-messages'),
+        chatForm: document.getElementById('stats-chat-form'),
+        chatInput: document.getElementById('stats-chat-input'),
+        chatStatus: document.getElementById('stats-chat-status'),
+        chatRefresh: document.getElementById('stats-chat-refresh'),
+        logsList: document.getElementById('stats-logs-list'),
+        logsPagination: document.getElementById('stats-logs-pagination'),
+        currentLogContainer: document.getElementById('stats-current-log-container'),
+        logsRefresh: document.getElementById('stats-logs-refresh'),
+        logsScopeButtons: Array.from(document.querySelectorAll('[data-logs-scope]'))
+      };
+
+      function numberFormat(v) {
+        try { return new Intl.NumberFormat().format(Number(v || 0)); } catch (_) { return String(v || 0); }
+      }
+      function fmt(v, digits = 1) {
+        const n = Number(v || 0);
+        return Number.isFinite(n) ? n.toFixed(digits) : '0';
+      }
+      function escapeHtml(str) {
+        return String(str ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+      function relTime(ts) {
+        if (!ts) return '--';
+        const now = Math.floor(Date.now() / 1000);
+        const diff = Math.max(0, now - Number(ts));
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return `${Math.floor(diff / 86400)}d ago`;
+      }
+      function hhmm(ts) {
+        if (!ts) return '';
+        const d = new Date(Number(ts) * 1000);
+        return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      }
+
+      function renderCumulative(payload) {
+        els.cumulativeMeta.textContent = `${numberFormat(payload.totalRows ?? payload.total ?? 0)} players • page ${payload.page || 1} / ${payload.totalPages || payload.total_pages || 1}`;
+        if (typeof payload.html === 'string' && els.cumulativeFragment) {
+          els.cumulativeFragment.innerHTML = payload.html;
+          initCumulativeSorting(els.cumulativeFragment);
+        }
+        if (typeof payload.focused_html === 'string' && els.focusedPlayer) {
+          els.focusedPlayer.innerHTML = payload.focused_html;
+        }
+      }
+
+      async function loadCumulative() {
+        const url = new URL('/stats/fetch_page.php', window.location.origin);
+        url.searchParams.set('q', state.cumulative.q || '');
+        url.searchParams.set('page', String(state.cumulative.page));
+        url.searchParams.set('perPage', String(state.cumulative.perPage));
+        if (state.cumulative.focusedPlayer) url.searchParams.set('player', state.cumulative.focusedPlayer);
+        const res = await fetch(url, { cache: 'no-store', headers: {'X-Requested-With':'XMLHttpRequest'} });
+        const payload = await res.json();
+        renderCumulative(payload || {});
+      }
+
+      function renderOnline(payload) {
+        if (!payload || payload.success !== true) {
+          els.onlineMeta.textContent = 'Online feed unavailable';
+          els.onlineCards.innerHTML = '';
+          els.onlineBody.innerHTML = '<tr><td colspan="9" class="stats-empty">Online feed unavailable.</td></tr>';
+          return;
+        }
+        const servers = Array.isArray(payload.servers) ? payload.servers : [];
+        const players = Array.isArray(payload.players) ? payload.players : [];
+        els.onlineMeta.textContent = `${numberFormat(payload.player_count || players.length)} / ${numberFormat(payload.visible_max_players || 32)} players • updated ${relTime(payload.updated)}`;
+        els.onlineCards.innerHTML = servers.map(server => `
+          <article class="stats-online-card">
+            <img src="${escapeHtml(server.map_image || '')}" alt="">
+            <div>
+              <h3>${escapeHtml(server.map_name || 'Unknown map')}</h3>
+              <p>${numberFormat(server.player_count)} / ${numberFormat(server.visible_max || 0)} players</p>
+              <p>${escapeHtml(server.city || '')} ${server.country_code ? '(' + escapeHtml(String(server.country_code).toUpperCase()) + ')' : ''}</p>
+              <p>${escapeHtml(server.host_ip || '')}${server.host_port ? ':' + escapeHtml(server.host_port) : ''}</p>
+            </div>
+          </article>
+        `).join('');
+        if (!players.length) {
+          els.onlineBody.innerHTML = '<tr><td colspan="9" class="stats-empty">Map changing or no players are currently online.</td></tr>';
+          return;
+        }
+        els.onlineBody.innerHTML = players.map(player => {
+          const kills = Number(player.kills || 0);
+          const deaths = Number(player.deaths || 0);
+          const damage = Number(player.damage || 0);
+          const playtime = Number(player.playtime || 0);
+          const shots = Number(player.shots || 0);
+          const hits = Number(player.hits || 0);
+          const kd = deaths > 0 ? (kills / deaths) : kills;
+          const dpm = playtime > 0 ? damage / (playtime / 60) : 0;
+          const acc = shots > 0 ? (hits / shots) * 100 : 0;
+          const team = Number(player.team || 0);
+          const rowClass = team === 2 ? 'team-red' : (team === 3 ? 'team-blue' : '');
+          return `
+            <tr class="${rowClass}">
+              <td>
+                <div class="stats-player-cell">
+                  <img src="${escapeHtml(player.avatar || '')}" alt="">
+                  <div>
+                    ${player.profileurl ? `<a href="${escapeHtml(player.profileurl)}" target="_blank" rel="noopener">${escapeHtml(player.personaname || player.steamid || 'Unknown')}</a>` : `<span>${escapeHtml(player.personaname || player.steamid || 'Unknown')}</span>`}
+                  </div>
+                </div>
+              </td>
+              <td>${numberFormat(player.kills)}</td>
+              <td>${numberFormat(player.deaths)}</td>
+              <td>${fmt(kd,2)}</td>
+              <td>${fmt(acc,1)}%</td>
+              <td>${numberFormat(player.assists)}</td>
+              <td>${numberFormat(player.damage)}</td>
+              <td>${fmt(dpm,1)}</td>
+              <td>${Math.floor(playtime/60)}m</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      async function loadOnline() {
+        try {
+          const res = await fetch('/stats/online.php', { cache: 'no-store' });
+          renderOnline(await res.json());
+        } catch (_) {
+          renderOnline({ success: false });
+        }
+      }
+
+      function renderChatRows(rows, replace = false) {
+        const arr = Array.isArray(rows) ? rows : [];
+        if (replace) els.chatMessages.innerHTML = '';
+        if (!arr.length && !els.chatMessages.children.length) {
+          els.chatMessages.innerHTML = '<div class="stats-empty">No messages yet.</div>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        arr.forEach(msg => {
+          if (!msg || !msg.id) return;
+          if (els.chatMessages.querySelector(`[data-chat-id="${CSS.escape(String(msg.id))}"]`)) return;
+          const row = document.createElement('div');
+          row.className = 'stats-chat-row';
+          row.dataset.chatId = String(msg.id);
+          row.innerHTML = `
+            <img src="${escapeHtml(msg.avatar || '')}" alt="">
+            <div>
+              <div class="stats-chat-header">
+                <span class="stats-chat-name">${escapeHtml(msg.name || 'Unknown')}</span>
+                <span class="stats-chat-time">${escapeHtml(hhmm(msg.created_at))}</span>
+              </div>
+              <div class="stats-chat-text">${escapeHtml(msg.message || '')}</div>
+            </div>
+          `;
+          frag.appendChild(row);
+          state.chat.afterId = Math.max(Number(state.chat.afterId || 0), Number(msg.id || 0));
+        });
+        if (replace) {
+          els.chatMessages.innerHTML = '';
+        } else if (els.chatMessages.querySelector('.stats-empty')) {
+          els.chatMessages.innerHTML = '';
+        }
+        els.chatMessages.appendChild(frag);
+        els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+      }
+
+      async function loadChat(initial = false) {
+        try {
+          const url = new URL('/stats/chat.php', window.location.origin);
+          if (initial || !state.chat.afterId) url.searchParams.set('limit', '50');
+          else url.searchParams.set('after', String(state.chat.afterId));
+          const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          const payload = await res.json();
+          const messages = Array.isArray(payload.messages) ? payload.messages : [];
+          if (initial) {
+            state.chat.afterId = payload.latest_id || payload.newest_id || (messages.length ? messages[messages.length - 1].id : null);
+            renderChatRows(messages, true);
+          } else if (messages.length) {
+            renderChatRows(messages, false);
+          }
+          els.chatMeta.textContent = `${numberFormat((payload.messages || []).length)} fetched • ${state.chat.afterId ? 'latest #' + state.chat.afterId : 'no messages'}`;
+        } catch (_) {
+          els.chatMeta.textContent = 'Chat unavailable';
+        }
+      }
+
+      async function sendChat(message) {
+        try {
+          const res = await fetch('/stats/chat.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          });
+          const payload = await res.json();
+          if (payload && payload.ok) {
+            els.chatStatus.textContent = payload.message || '';
+            await loadChat(false);
+            return true;
+          }
+          els.chatStatus.textContent = (payload && payload.error) ? payload.error : 'Failed to send';
+        } catch (_) {
+          els.chatStatus.textContent = 'Failed to send';
+        }
+        return false;
+      }
+
+      function renderLogsHtml(html) {
+        els.logsList.innerHTML = html || '<div class="stats-empty">No logs available.</div>';
+        const root = els.logsList.querySelector('.logs-fragment-root');
+        const page = Number(root?.dataset.page || state.logs.page || 1);
+        const totalPages = Number(root?.dataset.totalPages || 1);
+        renderPager(els.logsPagination, page, totalPages, (nextPage) => {
+          state.logs.page = nextPage;
+          loadLogs();
+        });
+      }
+
+      async function loadLogs() {
+        const url = new URL('/stats/logs_fragment.php', window.location.origin);
+        url.searchParams.set('scope', state.logs.scope);
+        url.searchParams.set('page', String(state.logs.page));
+        url.searchParams.set('perPage', String(state.logs.perPage));
+        try {
+          const res = await fetch(url, { cache: 'no-store', headers: {'X-Requested-With':'XMLHttpRequest'} });
+          renderLogsHtml(await res.text());
+        } catch (_) {
+          els.logsList.innerHTML = '<div class="stats-empty">Logs unavailable.</div>';
+        }
+      }
+
+      async function loadCurrentLog() {
+        try {
+          const res = await fetch('/stats/current_log_fragment.php?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) throw new Error('bad response');
+          els.currentLogContainer.innerHTML = await res.text();
+        } catch (_) {
+          els.currentLogContainer.innerHTML = '<div class="stats-empty">Failed to load current log.</div>';
+        }
+      }
+
+      function renderPager(container, page, totalPages, onPage) {
+        container.innerHTML = '';
+        totalPages = Math.max(1, Number(totalPages || 1));
+        page = Math.min(totalPages, Math.max(1, Number(page || 1)));
+        const addBtn = (label, target, disabled = false) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'stats-mini-btn';
+          btn.textContent = label;
+          btn.disabled = disabled;
+          if (disabled) btn.style.opacity = '.45';
+          btn.addEventListener('click', () => !disabled && onPage(target));
+          container.appendChild(btn);
+        };
+        addBtn('Prev', page - 1, page <= 1);
+        const info = document.createElement('span');
+        info.className = 'stats-muted';
+        info.textContent = `Page ${page} / ${totalPages}`;
+        container.appendChild(info);
+        addBtn('Next', page + 1, page >= totalPages);
+      }
+
+      function initCumulativeSorting(scope) {
+        const table = (scope || document).querySelector('#stats-table-cumulative');
+        if (!table || table.dataset.sortBound === '1') return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const headers = Array.from(table.querySelectorAll('th[data-key]'));
+        const sortState = { key: null, direction: 1 };
+
+        headers.forEach(header => {
+          header.style.cursor = 'pointer';
+          header.addEventListener('click', () => {
+            const key = header.dataset.key;
+            const type = header.dataset.type || 'text';
+            if (!key) return;
+            if (sortState.key === key) sortState.direction *= -1;
+            else { sortState.key = key; sortState.direction = 1; }
+
+            const rows = Array.from(tbody.querySelectorAll('tr[data-steamid]'));
+            rows.sort((a, b) => {
+              let av = a.dataset[key] ?? '';
+              let bv = b.dataset[key] ?? '';
+              if (key === 'drops') {
+                av = Number(a.dataset.drops || 0) * 1000000 + Number(a.dataset.dropped || 0);
+                bv = Number(b.dataset.drops || 0) * 1000000 + Number(b.dataset.dropped || 0);
+              } else if (type === 'number') {
+                av = Number(av);
+                bv = Number(bv);
+              } else {
+                av = String(av).toLowerCase();
+                bv = String(bv).toLowerCase();
+              }
+              if (av < bv) return -1 * sortState.direction;
+              if (av > bv) return 1 * sortState.direction;
+              return 0;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+            headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
+            header.classList.add(sortState.direction === 1 ? 'sorted-asc' : 'sorted-desc');
+          });
+        });
+
+        table.dataset.sortBound = '1';
+      }
+
+      function ensureOnlineLoop() {
+        if (!state.online.timer) {
+          loadOnline();
+          state.online.timer = window.setInterval(loadOnline, 10000);
+        }
+      }
+
+      function ensureChatLoop() {
+        if (!state.chat.timer) {
+          loadChat(true);
+          state.chat.timer = window.setInterval(() => loadChat(false), 4000);
+        }
+      }
+
+      els.cumulativeFragment?.addEventListener('submit', (e) => {
+        const form = e.target.closest('form');
+        if (!form) return;
+        e.preventDefault();
+        const qInput = form.querySelector('input[name="q"]');
+        state.cumulative.q = (qInput?.value || '').trim();
+        state.cumulative.page = 1;
+        loadCumulative();
+      });
+      els.cumulativeFragment?.addEventListener('click', (e) => {
+        const pagerLink = e.target.closest('.table-pagination-button[href]');
+        if (pagerLink) {
+          e.preventDefault();
+          const u = new URL(pagerLink.getAttribute('href'), window.location.origin);
+          state.cumulative.q = u.searchParams.get('q') || '';
+          state.cumulative.page = Number(u.searchParams.get('page') || '1');
+          loadCumulative();
+          return;
+        }
+        const row = e.target.closest('#stats-table-cumulative tbody tr[data-steamid]');
+        if (row) {
+          state.cumulative.focusedPlayer = row.dataset.steamid || '';
+          loadCumulative();
+        }
+      });
+      initCumulativeSorting(document);
+    })();
+  </script>
+</Layouts.app>
