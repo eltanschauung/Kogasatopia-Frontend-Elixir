@@ -85,19 +85,32 @@
     .empty-state { padding: 1rem; color:#aeb7c8; }
     @media (max-width: 900px) {
       .info-card { flex:1 1 calc(50% - 1rem); max-width: calc(50% - 1rem); min-width: 300px; }
+      .online-shell { padding: .6rem; border-radius: 12px; }
+      .online-topbar { margin-bottom: .45rem; }
     }
     @media (max-width: 640px) {
-      .info-card { flex:1 1 100%; max-width:100%; flex-direction:column; min-height:auto; }
+      .online-page { padding-left: 0; padding-right: 0; }
+      .online-shell { padding: .45rem; border-radius: 10px; }
+      .online-topbar.wt-topbar { padding: .5rem .55rem; }
+      .online-topbar h1 { font-size: .95rem; }
+      .online-topbar p { font-size: .78rem; line-height: 1.2; }
+      .info-card-grid { gap: .55rem; }
+      .info-card { flex:1 1 100%; max-width:100%; flex-direction:column; min-height:auto; min-width: 0; padding: .65rem; border-radius: 10px; }
       .info-card-right { flex:0 0 auto; margin-top:.75rem; }
       .info-card-image { width: 160px; height: 120px; max-height:none; }
-      .table-wrapper { margin: 0 -.25rem; border-radius: 14px; }
-      table.stats-table { min-width: 1120px; }
+      .table-wrapper { margin: 0; border-radius: 10px; }
+      table.stats-table { min-width: 980px; }
+      th { padding: .42rem .42rem; font-size: .62rem; }
+      td { padding: .4rem .42rem; font-size: .78rem; }
+      .player-avatar { width: 30px; height: 30px; }
+      .player-cell a { max-width: 88px; }
     }
   </style>
 
   <div class="online-page wt-page-pad">
     <div class="chat-nav-row chat-nav-row-top">
-      <a href="/" class="chat-home-btn">Home</a>
+      <a href="/" class="chat-home-btn">Blog</a>
+      <a href="/stats" class="chat-home-btn">Stats</a>
       <span class="chat-nav-pill" aria-current="page">
         Online Now
         <span id="nav-online-count" class="chat-nav-pill-count" aria-live="polite">-- / --</span>

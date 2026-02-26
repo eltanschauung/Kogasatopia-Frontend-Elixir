@@ -72,12 +72,26 @@
     }
     .logs-topbar-meta { }
     .logs-subnav { align-items: center; }
-    @media (max-width: 700px) { .logs-subnav { align-items: flex-start; } }
+    @media (max-width: 700px) {
+      .logs-page { padding-left: 0; padding-right: 0; }
+      .logs-subnav { align-items: flex-start; }
+      .logs-topbar.wt-topbar { padding: .5rem .55rem; }
+      .logs-topbar h1 { font-size: .95rem; }
+      .logs-topbar p { font-size: .78rem; line-height: 1.2; }
+      .logs-shell.wt-shell { padding: .5rem; border-radius: 12px; }
+      .logs-content-shell.wt-content-shell { padding: .45rem; }
+      .logs-container.wt-content-box { padding: .25rem; }
+      .logs-container .log-summary { padding: .55rem .6rem; gap: .35rem; }
+      .logs-container .log-body { padding: .55rem .6rem; }
+      .logs-pagination { gap: .3rem; margin-top: .55rem; }
+      .logs-page-button { padding: .34rem .6rem; font-size: .8rem; }
+    }
   </style>
 
   <div class="logs-page wt-page-pad">
     <div class="chat-nav-row chat-nav-row-top">
-      <a href="/" class="chat-home-btn">Home</a>
+      <a href="/" class="chat-home-btn">Blog</a>
+      <a href="/stats" class="chat-home-btn">Stats</a>
       <a href="/online" class="chat-nav-pill">
         Online Now
         <span id="nav-online-count" class="chat-nav-pill-count" aria-live="polite">-- / --</span>

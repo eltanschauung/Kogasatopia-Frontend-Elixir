@@ -1,32 +1,142 @@
-<Layouts.app flash={@flash}>
-  <section style="max-width: 900px; margin: 0 auto; padding: 1rem; color: #eee;">
-    <div style="background: rgba(18,20,28,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 1.2rem; box-shadow: 0 16px 40px rgba(0,0,0,.35);">
-      <h1 style="margin: 0 0 .35rem; font-size: 1.6rem;">WhaleTracker Elixir Port</h1>
-      <p style="margin: 0 0 1rem; color: #b8c0d0;">Frontend experiments and parity ports running on Phoenix.</p>
+<Layouts.app flash={@flash} wide={true}>
+  <section style="max-width: 1200px; margin: 0 auto; padding: .6rem; color: #eee;">
+    <style>
+      @keyframes nav-flicker {
+        0%, 100% {
+          text-shadow:
+            0 -1px 2px #fff,
+            0 -2px 4px #ff3,
+            0 -5px 10px #f90,
+            0 -8px 16px #c33;
+        }
+        50% {
+          text-shadow:
+            0 -1px 1px #fff,
+            0 -2px 3px #fc0,
+            0 -4px 8px #f60,
+            0 -6px 12px #a22;
+        }
+      }
+      .nav-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: .75rem;
+      }
+      .nav-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 12px;
+        padding: .9rem;
+        border: 1px solid rgba(255,255,255,.15);
+        background: rgba(18, 20, 28, .72);
+        box-shadow: 0 10px 28px rgba(0,0,0,.22);
+      }
+      .nav-card:hover {
+        border-color: rgba(127, 200, 255, .34);
+        background: rgba(20, 23, 33, .86);
+      }
+      .nav-card-title {
+        font-weight: 700;
+        margin-bottom: .3rem;
+      }
+      .nav-card-title.fire {
+        animation: nav-flicker 2s infinite;
+        font-weight: 700;
+      }
+      .nav-card-desc {
+        color: #c8d3e4;
+        font-size: .92rem;
+        line-height: 1.25;
+      }
+      .nav-card-open {
+        margin-top: .45rem;
+        color: #9fd1ff;
+        font-weight: 600;
+        font-size: .9rem;
+      }
+      @media (max-width: 700px) {
+        .nav-cards { grid-template-columns: 1fr; gap: .55rem; }
+        .nav-card { padding: .75rem; }
+        .nav-card-desc { font-size: .86rem; }
+      }
+    </style>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .85rem;">
-        <a href="/chat" style="display:block; text-decoration:none; color:inherit; background: rgba(127,200,255,.08); border: 1px solid rgba(127,200,255,.28); border-radius: 12px; padding: .9rem;">
-          <div style="font-weight: 700; margin-bottom: .25rem;">Chat</div>
-          <div style="color:#c8d3e4; font-size: .95rem;">Phoenix LiveView chat port and `/stats/chat.php` compatibility API.</div>
-          <div style="margin-top:.45rem; color:#7fc8ff; font-weight:600;">Open `/chat`</div>
+    <div style="background: rgba(18,20,28,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 1rem; box-shadow: 0 16px 40px rgba(0,0,0,.35);">
+      <h1 style="margin: 0 0 .25rem; font-size: 1.35rem;">Navigation</h1>
+      <p style="margin: 0 0 .8rem; color: #b8c0d0;">Links to current site sections, community pages, and legacy webapps.</p>
+
+      <div class="nav-cards">
+        <a href="/stats" class="nav-card">
+          <div class="nav-card-title">Stats</div>
+          <div class="nav-card-desc">Whaletracker stats hub</div>
+          <div class="nav-card-open">Open `/stats`</div>
         </a>
 
-        <a href="/mapsdb" style="display:block; text-decoration:none; color:inherit; background: rgba(127,255,178,.06); border: 1px solid rgba(127,255,178,.22); border-radius: 12px; padding: .9rem;">
-          <div style="font-weight: 700; margin-bottom: .25rem;">MapsDB</div>
-          <div style="color:#c8d3e4; font-size: .95rem;">Maps database editor port with file read/write and popularity chart parity passes.</div>
-          <div style="margin-top:.45rem; color:#87e099; font-weight:600;">Open `/mapsdb`</div>
+        <a href="/chat" class="nav-card">
+          <div class="nav-card-title">Chat</div>
+          <div class="nav-card-desc">Realtime chat page connected to the server(s)</div>
+          <div class="nav-card-open">Open `/chat`</div>
         </a>
 
-        <a href="/online" style="display:block; text-decoration:none; color:inherit; background: rgba(255,194,122,.06); border: 1px solid rgba(255,194,122,.22); border-radius: 12px; padding: .9rem;">
-          <div style="font-weight: 700; margin-bottom: .25rem;">Online Now</div>
-          <div style="color:#c8d3e4; font-size: .95rem;">Live online players and active server cards powered by the `/stats/online.php` compatibility API.</div>
-          <div style="margin-top:.45rem; color:#f0c27a; font-weight:600;">Open `/online`</div>
+        <a href="/mapsdb" class="nav-card">
+          <div class="nav-card-title">Maps</div>
+          <div class="nav-card-desc">Server statistics, popularity, map popularity list. Logged-in Admins can access the config editor.</div>
+          <div class="nav-card-open">Open `/mapsdb`</div>
         </a>
 
-        <a href="/" style="display:block; text-decoration:none; color:inherit; background: rgba(198,166,255,.06); border: 1px solid rgba(198,166,255,.22); border-radius: 12px; padding: .9rem;">
-          <div style="font-weight: 700; margin-bottom: .25rem;">Stats</div>
-          <div style="color:#c8d3e4; font-size: .95rem;">Tabbed stats hub port (`cumulative`, `online`, `chat`, and `logs`) using Phoenix compatibility APIs.</div>
-          <div style="margin-top:.45rem; color:#ceb3ff; font-weight:600;">Open `/`</div>
+        <a href="https://steamcommunity.com/groups/kogtf2" class="nav-card">
+          <div class="nav-card-title">Steam Group</div>
+          <div class="nav-card-desc">This group helps us organize the server and advertise along with providing an explanation and connect info</div>
+          <div class="nav-card-open">Open Steam Group</div>
+        </a>
+
+        <a href="https://steamcommunity.com/chat/invite/Es09gkBm" class="nav-card">
+          <div class="nav-card-title fire">Steam Chat</div>
+          <div class="nav-card-desc">This Steam group chat is how we organize the server, it's important! We ping everyone when we're going to play and announce anything else.</div>
+          <div class="nav-card-open">Open Steam Chat</div>
+        </a>
+
+        <a href="/fanart" class="nav-card">
+          <div class="nav-card-title">Artwork</div>
+          <div class="nav-card-desc">Server fanart page</div>
+          <div class="nav-card-open">Open `/fanart`</div>
+        </a>
+
+        <a href="/history" class="nav-card">
+          <div class="nav-card-title">History</div>
+          <div class="nav-card-desc">Server history page, containing ancient content and fliers organized neatly. Content is dated between 2022-2024.</div>
+          <div class="nav-card-open">Open `/history`</div>
+        </a>
+
+        <a href="/hat" class="nav-card">
+          <div class="nav-card-title">Mods</div>
+          <div class="nav-card-desc">Index of client-side mods for players to peruse. Generally Touhou themed and content may originate from the server's playerbase.</div>
+          <div class="nav-card-open">Open `/hat`</div>
+        </a>
+
+        <a href="/info" class="nav-card">
+          <div class="nav-card-title">Weapons</div>
+          <div class="nav-card-desc">Webapp that allows clients to navigate through weapon changes. This content pertains to normal TF2 and not our TF2C setup, but many changes are carried over to TF2C such as to the shortstop and more.</div>
+          <div class="nav-card-open">Open `/info`</div>
+        </a>
+
+        <a href="https://x.com/kogasatopia" class="nav-card">
+          <div class="nav-card-title">Twitter/X</div>
+          <div class="nav-card-desc">Minor social feed and announcements mirror</div>
+          <div class="nav-card-open">Open `x.com/kogasatopia`</div>
+        </a>
+
+        <a href="https://github.com/eltanschauung/Kogasatopia" class="nav-card">
+          <div class="nav-card-title">GitHub</div>
+          <div class="nav-card-desc">Source repository for the site and related server tooling.</div>
+          <div class="nav-card-open">Open GitHub Repo</div>
+        </a>
+
+        <a href="/leaderboard" class="nav-card">
+          <div class="nav-card-title">Old Online Webapp</div>
+          <div class="nav-card-desc">Legacy online player scoreboard</div>
+          <div class="nav-card-open">Open `/leaderboard`</div>
         </a>
       </div>
     </div>

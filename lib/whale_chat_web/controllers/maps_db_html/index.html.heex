@@ -122,7 +122,41 @@
       .popularity-control:hover { border-color: rgba(127, 200, 255, 0.55); background: rgba(127, 200, 255, 0.08); }
       .popularity-control.active { background: rgba(127, 200, 255, 0.15); color: #e6f4ff; }
       .popularity-placeholder { margin-top:.5rem; color: var(--text-muted, #95a5b7); font-style: italic; }
-      @media (max-width: 960px) { .mapsdb-layout { grid-template-columns:1fr; } .mapsdb-page { padding:1rem; } .mapsdb-card { padding:1rem; } }
+      @media (max-width: 960px) {
+        .mapsdb-page { padding: .35rem; }
+        .mapsdb-shell { width: 100%; }
+        .mapsdb-card { padding: .7rem .65rem .6rem; border-radius: 14px; }
+        .mapsdb-layout { grid-template-columns:1fr; gap: .7rem; }
+        .map-panel, .map-editor { padding: .65rem; gap: .55rem; border-radius: 12px; }
+        .map-panel { max-height: none; }
+        .map-editor { min-height: 0; }
+        #map-content { min-height: 280px; padding: .65rem; }
+        .mapsdb-title-row { margin-bottom: .55rem; }
+        .mapsdb-title-row h1 { font-size: 1.04rem; }
+        .mapsdb-page-actions { margin-bottom: .55rem; }
+        .mapsdb-page-actions .tab-controls { gap: .35rem; }
+        .mapsdb-page-actions .tab-button,
+        .mapsdb-page-actions .tab-button:link,
+        .mapsdb-page-actions .tab-button:visited { padding: .4rem .65rem; }
+        .map-preview-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+        .map-preview-card img { width: 132px; height: 99px; }
+        .map-preview-title { max-width: 132px; }
+        .mass-edit-card, .popularity-card, .map-preview-wall { padding: .7rem; border-radius: 12px; }
+      }
+      @media (max-width: 700px) {
+        .stats-header-shell .header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: .45rem;
+        }
+        .stats-header-shell .brand img { width: 100% !important; max-width: 260px; }
+        .stats-header-shell .animation img { width: 100%; max-width: 180px; }
+        .stats-auth { justify-content: flex-start; }
+        .mapsdb-sub { font-size: .8rem; }
+        .map-editor-toolbar { flex-wrap: wrap; }
+        .map-editor-toolbar button { width: 100%; }
+        .map-popularity-list { max-height: 220px; }
+      }
     </style>
   </head>
   <body>
@@ -185,8 +219,12 @@
         <div class="mapsdb-page-actions">
           <div class="tab-controls">
             <a href="/" class="tab-button">
-              <span class="tab-button-label tab-button-label--desktop">Home</span>
-              <span class="tab-button-label tab-button-label--mobile">Home</span>
+              <span class="tab-button-label tab-button-label--desktop">Blog</span>
+              <span class="tab-button-label tab-button-label--mobile">Blog</span>
+            </a>
+            <a href="/stats" class="tab-button">
+              <span class="tab-button-label tab-button-label--desktop">Stats</span>
+              <span class="tab-button-label tab-button-label--mobile">Stats</span>
             </a>
             <a href="/online" class="tab-button">
               <span class="tab-button-label tab-button-label--desktop">Online Now</span>

@@ -583,20 +583,61 @@ a {
 
 @media (max-width: 700px) {
   .whalechat-page-shell {
+    padding: 0.2rem;
+    min-height: 100dvh;
+  }
+
+  .whalechat-page-inner,
+  .whalechat-page-inner--wide {
+    width: 100%;
+    margin: 0;
+  }
+
+  .wt-page-pad {
+    padding: 0.2rem 0.25rem 0.45rem;
+  }
+
+  .wt-shell {
+    border-radius: 12px;
     padding: 0.55rem;
   }
 
+  .wt-subnav,
+  .wt-content-shell {
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+
+  .wt-content-box {
+    padding: 0.35rem;
+  }
+
   .chat-topbar {
-    padding: 0.55rem 0.65rem;
+    padding: 0.45rem 0.55rem;
   }
 
   .chat-nav-row-top {
-    margin: 0;
+    margin: 0 0 0.35rem;
+    gap: 0.35rem;
+  }
+
+  .chat-home-btn,
+  .chat-nav-pill {
+    padding: 0.34rem 0.68rem;
+    font-size: 0.8rem;
+  }
+
+  .chat-nav-pill-count {
+    min-width: 46px;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.72rem;
   }
 
   .wt-topbar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.45rem;
+    padding: 0.5rem 0.55rem;
   }
 
   .wt-topbar-badge {
@@ -613,8 +654,9 @@ a {
 
   #chat-panel.players-list {
     margin: 0;
-    height: 62vh;
-    max-height: 62vh;
+    min-height: 0;
+    height: 64dvh;
+    max-height: 64dvh;
   }
 
   #chat-messages {
@@ -643,10 +685,24 @@ a {
 
   .chat-form {
     max-width: 100%;
+    gap: 6px;
+    flex-direction: column;
   }
 
   #chat-send {
     min-width: 72px;
     padding-inline: 0.55rem;
+    min-height: 42px;
+  }
+
+  #chat-input {
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .chat-status {
+    margin: 0 2px;
+    font-size: 0.78rem;
   }
 }

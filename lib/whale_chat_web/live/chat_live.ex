@@ -134,7 +134,8 @@ defmodule WhaleChatWeb.ChatLive do
     <Layouts.app flash={@flash} wide={true}>
       <div id="chat-container">
         <div class="chat-nav-row chat-nav-row-top">
-          <a href="/" class="chat-home-btn">Home</a>
+          <a href="/" class="chat-home-btn">Blog</a>
+          <a href="/stats" class="chat-home-btn">Stats</a>
           <a href="/online" class="chat-nav-pill">
             Online Now
             <span id="chat-nav-online-count-top" class="chat-nav-pill-count">-- / --</span>

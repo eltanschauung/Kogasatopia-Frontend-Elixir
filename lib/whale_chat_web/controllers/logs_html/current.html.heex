@@ -33,12 +33,25 @@
     }
     .current-log-container .log-table { width:100%; min-width:980px; }
     .current-log-container .table-wrapper { overflow-x:auto; }
-    @media (max-width: 700px) { .logs-current-subnav { align-items: flex-start; } }
+    @media (max-width: 700px) {
+      .logs-current-page { padding-left: 0; padding-right: 0; }
+      .logs-current-subnav { align-items: flex-start; }
+      .logs-current-topbar.wt-topbar { padding: .5rem .55rem; }
+      .logs-current-topbar h1 { font-size: .95rem; }
+      .logs-current-topbar p { font-size: .78rem; line-height: 1.2; }
+      .logs-current-shell.wt-shell { padding: .5rem; border-radius: 12px; }
+      .logs-current-content.wt-content-shell { padding: .45rem; }
+      .current-log-container.wt-content-box { padding: .25rem; }
+      .current-log-container .log-summary { padding: .55rem .6rem; gap: .35rem; }
+      .current-log-container .log-body { padding: .55rem .6rem; }
+      .current-log-container .log-table { min-width: 760px; }
+    }
   </style>
 
   <div class="logs-current-page wt-page-pad">
     <div class="chat-nav-row chat-nav-row-top">
-      <a href="/" class="chat-home-btn">Home</a>
+      <a href="/" class="chat-home-btn">Blog</a>
+      <a href="/stats" class="chat-home-btn">Stats</a>
       <a href="/online" class="chat-nav-pill">
         Online Now
         <span id="nav-online-count" class="chat-nav-pill-count" aria-live="polite">-- / --</span>

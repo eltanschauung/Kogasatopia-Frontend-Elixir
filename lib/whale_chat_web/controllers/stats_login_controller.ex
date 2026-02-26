@@ -7,7 +7,7 @@ defmodule WhaleChatWeb.StatsLoginController do
 
   def show(conn, params) do
     action = params["action"] || "login"
-    return_to = sanitize_return(params["return"] || "/")
+    return_to = sanitize_return(params["return"] || "/stats")
 
     case action do
       "logout" ->
@@ -156,6 +156,6 @@ defmodule WhaleChatWeb.StatsLoginController do
   end
 
   defp sanitize_return(path) do
-    if is_binary(path) and String.starts_with?(path, "/") and not String.starts_with?(path, "//"), do: path, else: "/"
+    if is_binary(path) and String.starts_with?(path, "/") and not String.starts_with?(path, "//"), do: path, else: "/stats"
   end
 end

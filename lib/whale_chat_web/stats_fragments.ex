@@ -168,7 +168,7 @@ defmodule WhaleChatWeb.StatsFragments do
   defp cumulative_toolbar_html(q, page, total_rows, total_pages, prev_url, next_url) do
     """
     <div class="table-toolbar">
-      <form class="search-bar toolbar-search" method="get" action="/" data-rate-limit-ms="1500">
+      <form class="search-bar toolbar-search" method="get" action="/stats" data-rate-limit-ms="1500">
         <input type="text" name="q" value="#{e(q)}" placeholder="Search players by Steam name or SteamID">
         <button type="submit">Search</button>
         <p class="toolbar-search__rate-notice" aria-live="polite" hidden></p>

@@ -29,7 +29,13 @@ defmodule WhaleChatWeb.Router do
   scope "/", WhaleChatWeb do
     pipe_through :browser
 
-    get "/", StatsController, :index
+    get "/", LegacyController, :home
+    get "/index.php", LegacyController, :home
+    get "/index.html", LegacyController, :home
+    get "/info", InfoController, :entry
+    get "/info/index.html", InfoController, :entry
+    get "/stats", StatsController, :index
+    get "/stats/index.php", StatsController, :index
     get "/nav", PageController, :home
     live "/chat", ChatLive
     get "/online", OnlineController, :index
@@ -66,6 +72,12 @@ defmodule WhaleChatWeb.Router do
 
     get "/api.php", MapsDbApiController, :handle
     post "/api.php", MapsDbApiController, :handle
+  end
+
+  scope "/", WhaleChatWeb do
+    pipe_through :browser
+
+    match :*, "/*path", LegacyController, :passthrough
   end
 
   # Other scopes may use custom stacks.

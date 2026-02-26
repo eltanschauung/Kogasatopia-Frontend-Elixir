@@ -236,6 +236,48 @@
       .stats-chat-form { flex-direction:column; }
       .stats-online-card { flex-direction:column; }
       .stats-online-card img { width:100%; height:auto; aspect-ratio: 4 / 3; }
+      .stats-card { padding: .8rem .75rem .7rem; border-radius: 14px; }
+      .stats-home-row .tab-controls { gap: .4rem; }
+      .stats-home-row .tab-button,
+      .stats-home-row .tab-button:link,
+      .stats-home-row .tab-button:visited { padding: .45rem .7rem; }
+      .stats-focused-slot .detail-panel {
+        min-height: 0;
+        padding: 1rem .9rem;
+      }
+      .stats-focused-slot .detail-panel .detail-profile img { width: 96px; height: 96px; }
+      .stats-summary-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .55rem; }
+      .stats-summary-item { padding: .55rem .65rem; }
+      .wt-cumulative-fragment .search-bar input { min-width: 220px; }
+    }
+    @media (max-width: 700px) {
+      .stats-header-shell .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .5rem;
+      }
+      .stats-header-shell .brand img { width: 100% !important; max-width: 260px; }
+      .stats-header-shell .animation img { width: 100%; max-width: 180px; }
+      .stats-auth { justify-content: flex-start; }
+      .stats-title-row { margin-bottom: .5rem; gap: .45rem; }
+      .stats-title-row h1 { font-size: 1.02rem; }
+      .stats-sub { font-size: .8rem; }
+      .stats-home-row { margin: .1rem 0 .55rem; }
+      .stats-home-row .tab-controls { gap: .3rem; }
+      .stats-summary-grid { grid-template-columns: 1fr; }
+      .stats-summary-item .value { font-size: .95rem; }
+      .stats-cumulative-fragment-host .table-wrapper { border-radius: 10px; }
+      .wt-cumulative-fragment .table-toolbar { gap: .4rem; }
+      .wt-cumulative-fragment .search-bar { width: 100%; }
+      .wt-cumulative-fragment .search-bar input { min-width: 0; width: 100%; }
+      .wt-cumulative-fragment .search-bar button { width: 100%; }
+      .stats-focused-slot .detail-panel .detail-profile {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .stats-focused-slot .detail-panel .detail-grid { gap: .75rem; }
+      .stats-grid th, .stats-grid td { padding: .36rem .4rem; font-size: .78rem; }
+      table.stats-grid { min-width: 700px; }
     }
   </style>
 
@@ -279,9 +321,9 @@
                   <span class="stats-sub" style="margin:0;">Signed in</span>
                 <% end %>
               </div>
-              <a class="steam-logout" href="/stats/login.php?action=logout&return=/">Logout</a>
+              <a class="steam-logout" href="/stats/login.php?action=logout&return=/stats">Logout</a>
             <% else %>
-              <a class="steam-login" href="/stats/login.php?return=/">Login with Steam</a>
+              <a class="steam-login" href="/stats/login.php?return=/stats">Login with Steam</a>
             <% end %>
           </div>
         </header>
@@ -289,16 +331,20 @@
 
       <div class="stats-title-row">
         <div>
-          <h1>WhaleTracker <span>Stats</span> (Elixir)</h1>
+          <h1>Whaletracker <span>Stats</span> (Ver. 2.0)</h1>
           <p class="stats-sub">Powered by <a href="https://www.phoenixframework.org/">Phoenix.</a></p>
         </div>
       </div>
 
       <div class="stats-home-row">
         <div class="tab-controls">
+          <a href="/" class="tab-button">
+            <span class="tab-button-label tab-button-label--desktop">Blog</span>
+            <span class="tab-button-label tab-button-label--mobile">Blog</span>
+          </a>
           <a href="#" class="tab-button" aria-disabled="true" onclick="return false;">
-            <span class="tab-button-label tab-button-label--desktop">Home</span>
-            <span class="tab-button-label tab-button-label--mobile">Home</span>
+            <span class="tab-button-label tab-button-label--desktop">Stats</span>
+            <span class="tab-button-label tab-button-label--mobile">Stats</span>
           </a>
           <a href="/online" class="tab-button">
             <span class="tab-button-label tab-button-label--desktop">Online Now</span>
