@@ -1,7 +1,7 @@
-defmodule KogasaFrontend.WeaponRevertsConfigTest do
+defmodule KogasaFrontend.WeaponsConfigTest do
   use ExUnit.Case, async: true
 
-  alias KogasaFrontend.WeaponRevertsConfig
+  alias KogasaFrontend.WeaponsConfig
 
   @classes [
     %{key: "scout"},
@@ -10,14 +10,14 @@ defmodule KogasaFrontend.WeaponRevertsConfigTest do
     %{key: "all_class"}
   ]
 
-  test "merges weaponreverts and cwx display data by class" do
+  test "merges standard and custom weapon display data by class" do
     tmp = System.tmp_dir!()
     config_path = Path.join(tmp, "weapons-test.cfg")
 
     File.write!(config_path, """
-    "WeaponReverts"
+    "Weapons"
     {
-      "WeaponRevertsItemClasses"
+      "ItemClasses"
       {
         "scout"
         {
@@ -35,7 +35,7 @@ defmodule KogasaFrontend.WeaponRevertsConfigTest do
           "negative" "Nerfed"
         }
       }
-      "CWX"
+      "CustomWeapons"
       {
         "custom_heavy"
         {
@@ -76,7 +76,7 @@ defmodule KogasaFrontend.WeaponRevertsConfigTest do
     }
     """)
 
-    items = WeaponRevertsConfig.items_by_class(@classes, config_path)
+    items = WeaponsConfig.items_by_class(@classes, config_path)
 
     assert [%{name: "Revert Gun"}] = items["scout"]
 
@@ -105,7 +105,7 @@ defmodule KogasaFrontend.WeaponRevertsConfigTest do
 
     refute Enum.any?(items["scout"], &(&1.name == "All Class Item"))
 
-    assert WeaponRevertsConfig.cwx_item_names(config_path) == %{
+    assert WeaponsConfig.custom_item_names(config_path) == %{
              "custom_heavy" => "Custom Heavy Gun",
              "custom_soldier" => "Custom Soldier Banner",
              "custom_all_class" => "All Class Item"

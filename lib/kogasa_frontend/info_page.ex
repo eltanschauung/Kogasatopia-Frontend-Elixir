@@ -2,7 +2,7 @@ defmodule KogasaFrontend.InfoPage do
   @moduledoc false
 
   alias KogasaFrontend.Tf2Classes
-  alias KogasaFrontend.WeaponRevertsConfig
+  alias KogasaFrontend.WeaponsConfig
 
   @active_class "scout"
   @classes Tf2Classes.info_classes()
@@ -25,7 +25,7 @@ defmodule KogasaFrontend.InfoPage do
   end
 
   defp load_items_by_class do
-    WeaponRevertsConfig.items_by_class(@classes)
+    WeaponsConfig.items_by_class(@classes)
     |> Enum.into(%{}, fn {class_key, items} ->
       {class_key, Enum.map(items, &normalize_item(&1, class_key))}
     end)
@@ -117,7 +117,7 @@ defmodule KogasaFrontend.InfoPage do
 
   defp config_update_metadata do
     [
-      {"weapons.cfg", WeaponRevertsConfig.config_path()}
+      {"weapons.cfg", WeaponsConfig.config_path()}
     ]
     |> Enum.flat_map(fn {filename, path} ->
       case File.stat(path, time: :local) do

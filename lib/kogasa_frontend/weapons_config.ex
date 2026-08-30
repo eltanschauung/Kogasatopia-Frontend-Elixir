@@ -1,17 +1,17 @@
-defmodule KogasaFrontend.WeaponRevertsConfig do
+defmodule KogasaFrontend.WeaponsConfig do
   @moduledoc false
 
   import KogasaFrontend.Value, only: [truthy?: 1]
 
-  @item_classes_section "WeaponRevertsItemClasses"
-  @root_section "WeaponReverts"
-  @cwx_section "CWX"
+  @item_classes_section "ItemClasses"
+  @root_section "Weapons"
+  @custom_items_section "CustomWeapons"
   @config_filename "weapons.cfg"
   @repo_fallback "/home/kogasa/Kogasatopia/tf/addons/sourcemod/configs/weapons.cfg"
-  @default_cwx_image "100px-item_icon_wrangler.png"
+  @default_custom_image "100px-item_icon_wrangler.png"
   @tf2_class_keys ~w(scout soldier pyro demoman heavy engineer medic sniper spy)
   @all_class_key "all_class"
-  @cwx_inherit_class_rules [
+  @custom_inherit_class_rules [
     {~r/TF_WEAPON_SHOTGUN_PYRO|SHOTGUN_PYRO|FIREAXE|FLAMETHROWER|FLAREGUN/i, ["pyro"]},
     {~r/TF_WEAPON_SHOTGUN_HWG|SHOTGUN_HWG|TF_WEAPON_MINIGUN|MINIGUN/i, ["heavy"]},
     {~r/TF_WEAPON_SHOTGUN_SOLDIER|SHOTGUN_SOLDIER|TF_WEAPON_SHOTGUN_PRIMARY|Equalizer|Disciplinary Action|Market Gardener|Buff Banner|Battalion|Concheror|ROCKETLAUNCHER/i,
@@ -29,18 +29,18 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
 
   def items_by_class(classes, path \\ config_path()) do
     root = load_weapons_root(path)
-    revert_items = revert_items_by_class(classes, root)
-    cwx_items = cwx_items_by_class(classes, root)
+    standard_items = standard_items_by_class(classes, root)
+    custom_items = custom_items_by_class(classes, root)
 
     Enum.into(classes, %{}, fn %{key: class_key} ->
-      {class_key, Map.get(revert_items, class_key, []) ++ Map.get(cwx_items, class_key, [])}
+      {class_key, Map.get(standard_items, class_key, []) ++ Map.get(custom_items, class_key, [])}
     end)
   end
 
-  def cwx_item_names(path \\ config_path()) do
+  def custom_item_names(path \\ config_path()) do
     path
     |> load_weapons_root()
-    |> cwx_root()
+    |> custom_items_root()
     |> Enum.reduce(%{}, fn
       {item_key, children}, acc when is_list(children) ->
         Map.put(acc, item_key, value(children, "name", item_key))
@@ -50,7 +50,7 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     end)
   end
 
-  defp revert_items_by_class(classes, root) do
+  defp standard_items_by_class(classes, root) do
     class_map = section(root, @item_classes_section) || []
     weapon_sections = weapon_sections(root)
 
@@ -59,18 +59,18 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     end)
   end
 
-  defp cwx_items_by_class(classes, root) do
+  defp custom_items_by_class(classes, root) do
     class_keys = Enum.map(classes, & &1.key)
     blank_map = Map.new(class_keys, &{&1, []})
 
     root
-    |> cwx_root()
+    |> custom_items_root()
     |> Enum.reduce(blank_map, fn
       {item_key, children}, acc when is_list(children) ->
-        item = normalize_cwx_item(item_key, children)
+        item = normalize_custom_item(item_key, children)
 
         children
-        |> cwx_class_keys(class_keys)
+        |> custom_class_keys(class_keys)
         |> Enum.reduce(acc, fn class_key, class_acc ->
           Map.update!(class_acc, class_key, &[item | &1])
         end)
@@ -103,8 +103,8 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     |> root_entries()
   end
 
-  defp cwx_root(root) do
-    case section(root, @cwx_section) do
+  defp custom_items_root(root) do
+    case section(root, @custom_items_section) do
       entries when is_list(entries) -> entries
       _ -> []
     end
@@ -128,7 +128,7 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
       root
       |> Enum.filter(fn
         {@item_classes_section, _} -> false
-        {@cwx_section, _} -> false
+        {@custom_items_section, _} -> false
         {_, children} -> is_list(children)
       end)
       |> Map.new()
@@ -192,13 +192,13 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     }
   end
 
-  defp normalize_cwx_item(item_key, children) do
-    description = cwx_description(children)
+  defp normalize_custom_item(item_key, children) do
+    description = custom_description(children)
 
     %{
       key: item_key,
       name: value(children, "name", item_key),
-      image: first_value(children, ["image", "icon"], @default_cwx_image),
+      image: first_value(children, ["image", "icon"], @default_custom_image),
       type: "custom",
       reskin_only: truthy_value?(value(children, "reskin_only", "")),
       positive: value(description, "positive", ""),
@@ -207,7 +207,7 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     }
   end
 
-  defp cwx_description(children) do
+  defp custom_description(children) do
     Enum.find_value(children, [], fn
       {"description", description} when is_list(description) ->
         description
@@ -220,15 +220,15 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
     end)
   end
 
-  defp cwx_class_keys(children, allowed_class_keys) do
+  defp custom_class_keys(children, allowed_class_keys) do
     if truthy_value?(value(children, "all_class", "")) and @all_class_key in allowed_class_keys do
       [@all_class_key]
     else
-      cwx_regular_class_keys(children, allowed_class_keys)
+      custom_regular_class_keys(children, allowed_class_keys)
     end
   end
 
-  defp cwx_regular_class_keys(children, allowed_class_keys) do
+  defp custom_regular_class_keys(children, allowed_class_keys) do
     explicit =
       children
       |> section("used_by_classes")
@@ -243,17 +243,17 @@ defmodule KogasaFrontend.WeaponRevertsConfig do
       |> Enum.map(&elem(&1, 0))
 
     case explicit do
-      [] -> fallback_cwx_class_keys(children, allowed_class_keys)
+      [] -> fallback_custom_class_keys(children, allowed_class_keys)
       _ -> explicit
     end
   end
 
-  defp fallback_cwx_class_keys(children, allowed_class_keys) do
+  defp fallback_custom_class_keys(children, allowed_class_keys) do
     haystack =
       [value(children, "inherits", ""), value(children, "item_class", "")]
       |> Enum.join(" ")
 
-    @cwx_inherit_class_rules
+    @custom_inherit_class_rules
     |> Enum.find_value([], fn {pattern, classes} ->
       if Regex.match?(pattern, haystack) do
         Enum.filter(classes, &(&1 in allowed_class_keys))

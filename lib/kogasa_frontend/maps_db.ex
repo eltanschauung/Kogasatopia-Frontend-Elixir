@@ -13,12 +13,12 @@ defmodule KogasaFrontend.MapsDb do
   alias KogasaFrontend.Repo
   alias KogasaFrontend.TimeDisplay
   alias KogasaFrontend.Tf2Classes
-  alias KogasaFrontend.WeaponRevertsConfig
+  alias KogasaFrontend.WeaponsConfig
 
   @population_statistics_table "server_population_statistics_samples"
   @map_session_statistics_table "map_statistics_sessions"
   @vote_statistics_table "nativevotes_statistics_events"
-  @cwx_weapon_popularity_table "cwx_weapon_popularity"
+  @custom_weapon_popularity_table "cwx_weapon_popularity"
   @plugin_statistics_table "plugin_statistics_events"
   @class_popularity_order [1, 3, 7, 4, 6, 9, 5, 2, 8]
 
@@ -387,13 +387,13 @@ defmodule KogasaFrontend.MapsDb do
   end
 
   defp fetch_popular_custom_weapons do
-    if table_exists?(@cwx_weapon_popularity_table) do
-      cwx_names = WeaponRevertsConfig.cwx_item_names()
+    if table_exists?(@custom_weapon_popularity_table) do
+      custom_names = WeaponsConfig.custom_item_names()
 
       query_rows("""
       SELECT weapon_uid,
              COUNT(DISTINCT steamid64) AS equipped_clients
-      FROM #{@cwx_weapon_popularity_table}
+      FROM #{@custom_weapon_popularity_table}
       WHERE equipped != 0
         AND weapon_uid <> ''
       GROUP BY weapon_uid
@@ -405,7 +405,7 @@ defmodule KogasaFrontend.MapsDb do
 
         %{
           weapon_uid: weapon_uid,
-          name: Map.get(cwx_names, weapon_uid, weapon_uid),
+          name: Map.get(custom_names, weapon_uid, weapon_uid),
           equipped_clients: int(row.equipped_clients)
         }
       end)
