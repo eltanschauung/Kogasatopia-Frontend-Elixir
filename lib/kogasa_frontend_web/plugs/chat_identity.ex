@@ -11,17 +11,19 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
         :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
 
     persona = Chat.ensure_session_persona(get_session(conn, "wt_chat_persona"))
+    source_subnet = source_subnet_stamp(conn)
 
     conn =
       conn
       |> put_session("wt_chat_client_token", client_token)
       |> put_session("wt_chat_persona", persona)
-      |> assign(:chat_identity, build_identity(conn, client_token, persona))
+      |> put_session("wt_chat_source_subnet", source_subnet)
+      |> assign(:chat_identity, build_identity(conn, client_token, persona, source_subnet))
 
     conn
   end
 
-  defp build_identity(conn, client_token, persona) do
+  defp build_identity(conn, client_token, persona, source_subnet) do
     secret = Application.get_env(:kogasa_frontend, :chat_ip_secret, "changeme")
     iphash = short_hash("#{secret}|#{client_token}")
 
@@ -32,6 +34,7 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
       iphash: iphash,
       rate_key: client_token,
       remote_ip: remote_ip_string(conn),
+      source_subnet: source_subnet,
       server_ip: Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1"),
       server_port: Application.get_env(:kogasa_frontend, :chat_server_port, 443)
     }
@@ -48,4 +51,7 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
   rescue
     _ -> ""
   end
+
+  defp source_subnet_stamp(%Plug.Conn{remote_ip: {70, 175, _, _}}), do: "70.175.0.0/16"
+  defp source_subnet_stamp(_conn), do: nil
 end

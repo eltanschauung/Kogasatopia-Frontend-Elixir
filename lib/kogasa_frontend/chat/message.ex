@@ -11,6 +11,7 @@ defmodule KogasaFrontend.Chat.Message do
     field :steamid, :string
     field :personaname, :string
     field :iphash, :string
+    field :source_subnet, :string
     field :message, :string
     field :server_ip, :string
     field :server_port, :integer
@@ -24,6 +25,7 @@ defmodule KogasaFrontend.Chat.Message do
       :steamid,
       :personaname,
       :iphash,
+      :source_subnet,
       :message,
       :server_ip,
       :server_port,

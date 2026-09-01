@@ -8,6 +8,7 @@ defmodule KogasaFrontend.Chat.OutboxMessage do
   schema "whaletracker_chat_outbox" do
     field :created_at, :integer
     field :iphash, :string
+    field :source_subnet, :string
     field :display_name, :string
     field :message, :string
     field :server_ip, :string
@@ -20,6 +21,7 @@ defmodule KogasaFrontend.Chat.OutboxMessage do
     |> cast(attrs, [
       :created_at,
       :iphash,
+      :source_subnet,
       :display_name,
       :message,
       :server_ip,

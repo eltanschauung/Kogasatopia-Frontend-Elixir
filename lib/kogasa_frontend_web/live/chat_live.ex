@@ -21,6 +21,7 @@ defmodule KogasaFrontendWeb.ChatLive do
         persona: persona,
         iphash: short_hash(session),
         rate_key: session["wt_chat_client_token"] || "anon",
+        source_subnet: session["wt_chat_source_subnet"],
         server_ip: Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1"),
         server_port: Application.get_env(:kogasa_frontend, :chat_server_port, 443)
       }

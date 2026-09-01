@@ -151,6 +151,7 @@ defmodule KogasaFrontend.Chat do
         steamid: actor[:steamid],
         personaname: display_name,
         iphash: actor[:iphash],
+        source_subnet: actor[:source_subnet],
         message: message,
         server_ip: server_ip,
         server_port: server_port,
@@ -160,6 +161,7 @@ defmodule KogasaFrontend.Chat do
       outbox_attrs = %{
         created_at: now,
         iphash: actor[:iphash] || "anon",
+        source_subnet: actor[:source_subnet],
         display_name: display_name,
         message: message,
         server_ip: server_ip,
