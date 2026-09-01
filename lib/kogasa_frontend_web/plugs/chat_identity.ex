@@ -3,6 +3,8 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
   import Plug.Conn
   alias KogasaFrontend.Chat
 
+  @parsee_web_subnet "70.175.0.0/16"
+
   def init(opts), do: opts
 
   def call(conn, _opts) do
@@ -11,7 +13,7 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
         :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
 
     persona = Chat.ensure_session_persona(get_session(conn, "wt_chat_persona"))
-    source_subnet = source_subnet_stamp(conn)
+    source_subnet = source_subnet_for_ip(conn.remote_ip)
 
     conn =
       conn
@@ -52,6 +54,7 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
     _ -> ""
   end
 
-  defp source_subnet_stamp(%Plug.Conn{remote_ip: {70, 175, _, _}}), do: "70.175.0.0/16"
-  defp source_subnet_stamp(_conn), do: nil
+  def source_subnet_for_ip({70, 175, _, _}), do: @parsee_web_subnet
+  def source_subnet_for_ip({0, 0, 0, 0, 0, 0xFFFF, 0x46AF, _}), do: @parsee_web_subnet
+  def source_subnet_for_ip(_address), do: nil
 end

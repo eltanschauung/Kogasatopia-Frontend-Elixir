@@ -3,6 +3,7 @@ defmodule KogasaFrontendWeb.ChatLive do
 
   alias KogasaFrontend.Chat
   alias KogasaFrontend.TimeDisplay
+  alias KogasaFrontendWeb.Plugs.ChatIdentity
   @poll_ms 4_000
 
   @impl true
@@ -21,7 +22,7 @@ defmodule KogasaFrontendWeb.ChatLive do
         persona: persona,
         iphash: short_hash(session),
         rate_key: session["wt_chat_client_token"] || "anon",
-        source_subnet: session["wt_chat_source_subnet"],
+        source_subnet: source_subnet(socket, session),
         server_ip: Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1"),
         server_port: Application.get_env(:kogasa_frontend, :chat_server_port, 443)
       }
@@ -302,6 +303,17 @@ defmodule KogasaFrontendWeb.ChatLive do
     |> :crypto.hash("#{secret}|#{token}")
     |> Base.encode16(case: :lower)
     |> String.slice(0, 8)
+  end
+
+  defp source_subnet(socket, session) do
+    if connected?(socket) do
+      case get_connect_info(socket, :peer_data) do
+        %{address: address} -> ChatIdentity.source_subnet_for_ip(address)
+        _ -> session["wt_chat_source_subnet"]
+      end
+    else
+      session["wt_chat_source_subnet"]
+    end
   end
 
   defp ensure_persona(identity, session, fallback_persona) do
