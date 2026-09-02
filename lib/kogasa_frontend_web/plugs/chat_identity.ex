@@ -35,7 +35,7 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
       persona: persona,
       iphash: iphash,
       rate_key: client_token,
-      remote_ip: remote_ip_string(conn),
+      remote_ip: remote_ip_string(conn.remote_ip),
       source_subnet: source_subnet,
       server_ip: Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1"),
       server_port: Application.get_env(:kogasa_frontend, :chat_server_port, 443)
@@ -46,13 +46,15 @@ defmodule KogasaFrontendWeb.Plugs.ChatIdentity do
     :sha256 |> :crypto.hash(value) |> Base.encode16(case: :lower) |> String.slice(0, 8)
   end
 
-  defp remote_ip_string(conn) do
-    conn.remote_ip
+  def remote_ip_string(address) when is_tuple(address) do
+    address
     |> Tuple.to_list()
     |> Enum.join(".")
   rescue
     _ -> ""
   end
+
+  def remote_ip_string(_address), do: ""
 
   def source_subnet_for_ip({70, 175, _, _}), do: @parsee_web_subnet
   def source_subnet_for_ip({0, 0, 0, 0, 0, 0xFFFF, 0x46AF, _}), do: @parsee_web_subnet

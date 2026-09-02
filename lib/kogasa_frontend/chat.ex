@@ -19,6 +19,8 @@ defmodule KogasaFrontend.Chat do
   alias KogasaFrontend.Repo
 
   @topic "chat:live"
+  @same_message_limit 3
+  @same_message_window_seconds 300
 
   def topic, do: @topic
 
@@ -129,72 +131,105 @@ defmodule KogasaFrontend.Chat do
 
   def create_chat_message(actor, message) do
     rate_key = "chat:" <> to_string(actor[:rate_key] || actor[:iphash] || "anon")
+    same_message_key = same_message_rate_key(actor, message)
 
-    if RateLimiter.allow?(rate_key, 5) do
-      now = System.system_time(:second)
+    cond do
+      not RateLimiter.allow?(rate_key, 5) ->
+        {:error, :rate_limited}
 
-      server_ip =
-        actor[:server_ip] || Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1")
+      not RateLimiter.allow_count?(
+        same_message_key,
+        @same_message_limit,
+        @same_message_window_seconds
+      ) ->
+        {:error, :duplicate_rate_limited}
 
-      server_port =
-        actor[:server_port] || Application.get_env(:kogasa_frontend, :chat_server_port, 443)
+      true ->
+        now = System.system_time(:second)
 
-      display_name =
-        cond do
-          actor[:steamid] && actor[:personaname] -> actor[:personaname] <> " | Web"
-          actor[:personaname] -> actor[:personaname]
-          true -> "Web Player"
+        server_ip =
+          actor[:server_ip] || Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1")
+
+        server_port =
+          actor[:server_port] || Application.get_env(:kogasa_frontend, :chat_server_port, 443)
+
+        display_name =
+          cond do
+            actor[:steamid] && actor[:personaname] -> actor[:personaname] <> " | Web"
+            actor[:personaname] -> actor[:personaname]
+            true -> "Web Player"
+          end
+
+        attrs = %{
+          created_at: now,
+          steamid: actor[:steamid],
+          personaname: display_name,
+          iphash: actor[:iphash],
+          source_subnet: actor[:source_subnet],
+          message: message,
+          server_ip: server_ip,
+          server_port: server_port,
+          alert: true
+        }
+
+        outbox_attrs = %{
+          created_at: now,
+          iphash: actor[:iphash] || "anon",
+          source_subnet: actor[:source_subnet],
+          display_name: display_name,
+          message: message,
+          server_ip: server_ip,
+          server_port: server_port
+        }
+
+        multi =
+          Multi.new()
+          |> Multi.insert(:chat, Message.changeset(%Message{}, attrs))
+          |> Multi.insert(:outbox, OutboxMessage.changeset(%OutboxMessage{}, outbox_attrs))
+
+        try do
+          case Repo.transaction(multi) do
+            {:ok, %{chat: msg}} ->
+              row = Map.from_struct(msg)
+
+              payload =
+                row
+                |> format_message(%{}, PlayerIdentity.name_styles_for_ids([row.steamid]))
+                |> message_to_json()
+
+              Phoenix.PubSub.broadcast(KogasaFrontend.PubSub, @topic, {:new_message, payload})
+              {:ok, :sent}
+
+            {:error, _step, _changeset, _changes} ->
+              {:error, :server}
+          end
+        rescue
+          _ -> {:error, :server}
         end
-
-      attrs = %{
-        created_at: now,
-        steamid: actor[:steamid],
-        personaname: display_name,
-        iphash: actor[:iphash],
-        source_subnet: actor[:source_subnet],
-        message: message,
-        server_ip: server_ip,
-        server_port: server_port,
-        alert: true
-      }
-
-      outbox_attrs = %{
-        created_at: now,
-        iphash: actor[:iphash] || "anon",
-        source_subnet: actor[:source_subnet],
-        display_name: display_name,
-        message: message,
-        server_ip: server_ip,
-        server_port: server_port
-      }
-
-      multi =
-        Multi.new()
-        |> Multi.insert(:chat, Message.changeset(%Message{}, attrs))
-        |> Multi.insert(:outbox, OutboxMessage.changeset(%OutboxMessage{}, outbox_attrs))
-
-      try do
-        case Repo.transaction(multi) do
-          {:ok, %{chat: msg}} ->
-            row = Map.from_struct(msg)
-
-            payload =
-              row
-              |> format_message(%{}, PlayerIdentity.name_styles_for_ids([row.steamid]))
-              |> message_to_json()
-
-            Phoenix.PubSub.broadcast(KogasaFrontend.PubSub, @topic, {:new_message, payload})
-            {:ok, :sent}
-
-          {:error, _step, _changeset, _changes} ->
-            {:error, :server}
-        end
-      rescue
-        _ -> {:error, :server}
-      end
-    else
-      {:error, :rate_limited}
     end
+  end
+
+  defp same_message_rate_key(actor, message) do
+    client_identity =
+      Enum.find(
+        [actor[:remote_ip], actor[:rate_key], actor[:iphash]],
+        "anon",
+        &(is_binary(&1) and &1 != "")
+      )
+
+    normalized_message =
+      message
+      |> String.normalize(:nfc)
+      |> String.downcase()
+      |> String.replace(~r/\s+/u, " ")
+
+    "chat-repeat:" <> rate_digest(client_identity) <> ":" <> rate_digest(normalized_message)
+  end
+
+  defp rate_digest(value) do
+    :sha256
+    |> :crypto.hash(to_string(value))
+    |> Base.encode16(case: :lower)
   end
 
   defp format_message(row, steam_profiles, name_styles) do

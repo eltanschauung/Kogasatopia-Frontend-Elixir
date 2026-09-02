@@ -22,6 +22,7 @@ defmodule KogasaFrontendWeb.ChatLive do
         persona: persona,
         iphash: short_hash(session),
         rate_key: session["wt_chat_client_token"] || "anon",
+        remote_ip: remote_ip(socket),
         source_subnet: source_subnet(socket, session),
         server_ip: Application.get_env(:kogasa_frontend, :chat_server_ip, "127.0.0.1"),
         server_port: Application.get_env(:kogasa_frontend, :chat_server_port, 443)
@@ -71,6 +72,9 @@ defmodule KogasaFrontendWeb.ChatLive do
 
       {:error, :rate_limited} ->
         {:noreply, assign(socket, :status, "Rate limited (wait 5s)")}
+
+      {:error, :duplicate_rate_limited} ->
+        {:noreply, assign(socket, :status, "Repeated message limit reached (3 per 5 minutes)")}
 
       {:error, :invalid} ->
         {:noreply, assign(socket, :status, "Invalid message")}
@@ -313,6 +317,17 @@ defmodule KogasaFrontendWeb.ChatLive do
       end
     else
       session["wt_chat_source_subnet"]
+    end
+  end
+
+  defp remote_ip(socket) do
+    if connected?(socket) do
+      case get_connect_info(socket, :peer_data) do
+        %{address: address} -> ChatIdentity.remote_ip_string(address)
+        _ -> ""
+      end
+    else
+      ""
     end
   end
 
