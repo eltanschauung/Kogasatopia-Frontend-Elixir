@@ -7,6 +7,7 @@ defmodule KogasaFrontend.Chat do
 
   alias KogasaFrontend.Chat.{
     AvatarService,
+    IpBan,
     Message,
     MessageParts,
     OutboxMessage,
@@ -134,6 +135,9 @@ defmodule KogasaFrontend.Chat do
     same_message_key = same_message_rate_key(actor, message)
 
     cond do
+      IpBan.blocked?(actor) ->
+        {:error, :ip_banned}
+
       not RateLimiter.allow?(rate_key, 5) ->
         {:error, :rate_limited}
 
@@ -142,7 +146,7 @@ defmodule KogasaFrontend.Chat do
         @same_message_limit,
         @same_message_window_seconds
       ) ->
-        {:error, :duplicate_rate_limited}
+        duplicate_rate_limit_result(actor)
 
       true ->
         now = System.system_time(:second)
@@ -206,6 +210,13 @@ defmodule KogasaFrontend.Chat do
         rescue
           _ -> {:error, :server}
         end
+    end
+  end
+
+  defp duplicate_rate_limit_result(actor) do
+    case IpBan.record_antispam_block(actor) do
+      :banned -> {:error, :ip_banned}
+      :not_banned -> {:error, :duplicate_rate_limited}
     end
   end
 
