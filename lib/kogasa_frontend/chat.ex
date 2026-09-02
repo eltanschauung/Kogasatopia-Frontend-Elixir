@@ -13,6 +13,7 @@ defmodule KogasaFrontend.Chat do
     OutboxMessage,
     Persona,
     RateLimiter,
+    SpamGuard,
     SteamProfiles
   }
 
@@ -22,6 +23,8 @@ defmodule KogasaFrontend.Chat do
   @topic "chat:live"
   @same_message_limit 3
   @same_message_window_seconds 300
+  @message_volume_limit 15
+  @message_volume_window_seconds 180
 
   def topic, do: @topic
 
@@ -133,6 +136,7 @@ defmodule KogasaFrontend.Chat do
   def create_chat_message(actor, message) do
     rate_key = "chat:" <> to_string(actor[:rate_key] || actor[:iphash] || "anon")
     same_message_key = same_message_rate_key(actor, message)
+    message_volume_key = message_volume_rate_key(actor)
 
     cond do
       IpBan.blocked?(actor) ->
@@ -141,12 +145,22 @@ defmodule KogasaFrontend.Chat do
       not RateLimiter.allow?(rate_key, 5) ->
         {:error, :rate_limited}
 
+      SpamGuard.suspicious_content?(message) ->
+        antispam_limit_result(actor, :suspicious_content, :spam_limited)
+
       not RateLimiter.allow_count?(
         same_message_key,
         @same_message_limit,
         @same_message_window_seconds
       ) ->
-        duplicate_rate_limit_result(actor)
+        antispam_limit_result(actor, :canonical_duplicate, :duplicate_rate_limited)
+
+      not RateLimiter.allow_count?(
+        message_volume_key,
+        @message_volume_limit,
+        @message_volume_window_seconds
+      ) ->
+        antispam_limit_result(actor, :sustained_volume, :spam_limited)
 
       true ->
         now = System.system_time(:second)
@@ -213,28 +227,32 @@ defmodule KogasaFrontend.Chat do
     end
   end
 
-  defp duplicate_rate_limit_result(actor) do
-    case IpBan.record_antispam_block(actor) do
+  defp antispam_limit_result(actor, reason, public_error) do
+    case IpBan.record_antispam_block(actor, reason) do
       :banned -> {:error, :ip_banned}
-      :not_banned -> {:error, :duplicate_rate_limited}
+      :not_banned -> {:error, public_error}
     end
   end
 
   defp same_message_rate_key(actor, message) do
-    client_identity =
-      Enum.find(
-        [actor[:remote_ip], actor[:rate_key], actor[:iphash]],
-        "anon",
-        &(is_binary(&1) and &1 != "")
-      )
+    normalized_message = SpamGuard.normalize_for_fingerprint(message)
 
-    normalized_message =
-      message
-      |> String.normalize(:nfc)
-      |> String.downcase()
-      |> String.replace(~r/\s+/u, " ")
+    "chat-repeat:" <>
+      rate_digest(client_identity(actor)) <>
+      ":" <>
+      rate_digest(normalized_message)
+  end
 
-    "chat-repeat:" <> rate_digest(client_identity) <> ":" <> rate_digest(normalized_message)
+  defp message_volume_rate_key(actor) do
+    "chat-volume:" <> rate_digest(client_identity(actor))
+  end
+
+  defp client_identity(actor) do
+    Enum.find(
+      [actor[:remote_ip], actor[:rate_key], actor[:iphash]],
+      "anon",
+      &(is_binary(&1) and &1 != "")
+    )
   end
 
   defp rate_digest(value) do

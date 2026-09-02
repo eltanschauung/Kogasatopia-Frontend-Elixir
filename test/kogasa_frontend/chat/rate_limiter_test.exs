@@ -18,4 +18,11 @@ defmodule KogasaFrontend.Chat.RateLimiterTest do
     assert allowed == 3
     refute RateLimiter.allow_count?(key, 3, 300)
   end
+
+  test "limits sustained message volume within a counted window" do
+    key = "test-volume-#{System.unique_integer([:positive])}"
+
+    assert Enum.all?(1..15, fn _ -> RateLimiter.allow_count?(key, 15, 180) end)
+    refute RateLimiter.allow_count?(key, 15, 180)
+  end
 end

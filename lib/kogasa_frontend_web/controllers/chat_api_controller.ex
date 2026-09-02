@@ -40,6 +40,11 @@ defmodule KogasaFrontendWeb.ChatApiController do
           |> put_status(:too_many_requests)
           |> json(%{ok: false, error: "duplicate_rate"})
 
+        {:error, :spam_limited} ->
+          conn
+          |> put_status(:too_many_requests)
+          |> json(%{ok: false, error: "spam"})
+
         {:error, :ip_banned} ->
           conn
           |> put_status(:forbidden)

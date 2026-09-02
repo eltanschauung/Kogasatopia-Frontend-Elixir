@@ -76,6 +76,9 @@ defmodule KogasaFrontendWeb.ChatLive do
       {:error, :duplicate_rate_limited} ->
         {:noreply, assign(socket, :status, "Repeated message limit reached (3 per 5 minutes)")}
 
+      {:error, :spam_limited} ->
+        {:noreply, assign(socket, :status, "Message blocked by antispam")}
+
       {:error, :ip_banned} ->
         {:noreply, assign(socket, :status, "Your network is banned from webchat for one week")}
 

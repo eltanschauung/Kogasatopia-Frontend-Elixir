@@ -10,7 +10,7 @@ defmodule KogasaFrontend.Chat.IpBan do
   @antispam_strikes_before_ban 3
   @antispam_strike_window_seconds 300
   @ban_seconds 7 * 24 * 60 * 60
-  @reason "repeated-message antispam"
+  @reason_prefix "webchat antispam"
 
   def blocked?(actor) do
     case subnet_for_actor(actor) do
@@ -27,7 +27,7 @@ defmodule KogasaFrontend.Chat.IpBan do
       false
   end
 
-  def record_antispam_block(actor) do
+  def record_antispam_block(actor, reason) do
     case subnet_for_actor(actor) do
       nil ->
         :not_banned
@@ -42,7 +42,7 @@ defmodule KogasaFrontend.Chat.IpBan do
            ) do
           :not_banned
         else
-          ban(subnet)
+          ban(subnet, reason)
         end
     end
   end
@@ -73,14 +73,14 @@ defmodule KogasaFrontend.Chat.IpBan do
 
   def subnet_for_ip(_ip), do: nil
 
-  defp ban(subnet) do
+  defp ban(subnet, reason) do
     now = System.system_time(:second)
 
     attrs = %{
       subnet: subnet,
       banned_at: now,
       expires_at: now + @ban_seconds,
-      reason: @reason
+      reason: "#{@reason_prefix}: #{reason}"
     }
 
     %BannedIp{}
