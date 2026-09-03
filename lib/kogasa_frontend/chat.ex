@@ -142,6 +142,9 @@ defmodule KogasaFrontend.Chat do
       IpBan.blocked?(actor) ->
         {:error, :ip_banned}
 
+      SpamGuard.automatic_ban_content?(message) ->
+        immediate_ban_result(actor, :prohibited_content)
+
       not RateLimiter.allow?(rate_key, 5) ->
         {:error, :rate_limited}
 
@@ -231,6 +234,13 @@ defmodule KogasaFrontend.Chat do
     case IpBan.record_antispam_block(actor, reason) do
       :banned -> {:error, :ip_banned}
       :not_banned -> {:error, public_error}
+    end
+  end
+
+  defp immediate_ban_result(actor, reason) do
+    case IpBan.ban_immediately(actor, reason) do
+      :banned -> {:error, :ip_banned}
+      :not_banned -> {:error, :spam_limited}
     end
   end
 

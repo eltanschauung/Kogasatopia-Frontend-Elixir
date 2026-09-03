@@ -5,6 +5,7 @@ defmodule KogasaFrontend.Chat.SpamGuard do
   @low_diversity_min_length 12
   @dominant_grapheme_ratio 0.8
   @suspicious_codepoint_ratio 0.5
+  @automatic_ban_terms ["porn", "child"]
 
   def normalize_for_fingerprint(message) when is_binary(message) do
     message
@@ -22,6 +23,11 @@ defmodule KogasaFrontend.Chat.SpamGuard do
       |> String.graphemes()
 
     low_diversity?(graphemes) || suspicious_codepoints?(graphemes)
+  end
+
+  def automatic_ban_content?(message) when is_binary(message) do
+    normalized = normalize(message)
+    Enum.all?(@automatic_ban_terms, &String.contains?(normalized, &1))
   end
 
   defp normalize(message) do

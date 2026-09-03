@@ -47,6 +47,13 @@ defmodule KogasaFrontend.Chat.IpBan do
     end
   end
 
+  def ban_immediately(actor, reason) do
+    case subnet_for_actor(actor) do
+      nil -> :not_banned
+      subnet -> ban(subnet, reason)
+    end
+  end
+
   def subnet_for_actor(actor), do: subnet_for_ip(actor[:remote_ip])
 
   def subnet_for_ip(ip) when is_binary(ip) do

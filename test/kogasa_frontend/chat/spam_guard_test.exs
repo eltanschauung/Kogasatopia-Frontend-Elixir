@@ -25,4 +25,11 @@ defmodule KogasaFrontend.Chat.SpamGuardTest do
     assert SpamGuard.suspicious_content?(String.duplicate(private_use, 30))
     refute SpamGuard.suspicious_content?("This is a normal webchat message.")
   end
+
+  test "requires both automatic-ban terms in the same message" do
+    assert SpamGuard.automatic_ban_content?("CHILD safety: block porn")
+    assert SpamGuard.automatic_ban_content?("pornographic child content")
+    refute SpamGuard.automatic_ban_content?("child safety")
+    refute SpamGuard.automatic_ban_content?("porn filtering")
+  end
 end
